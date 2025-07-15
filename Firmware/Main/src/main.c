@@ -189,6 +189,15 @@ int main(int argc, char* argv[])
 		100000
 	);
 
+	uint16_t charWidth = FMGL_LoadableFont_GetCharacterWidth(&MainFontContext, 'A');
+
+	uint8_t buffer[32];
+	sprintf(buffer, "Character width: %d", charWidth);
+
+	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &font, 0, linePosition, &width, &height, false, buffer);
+	linePosition += height;
+	FMGL_API_PushFramebuffer(&FmglContext);
+
 	while(true)
 	{
 

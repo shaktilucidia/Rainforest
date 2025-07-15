@@ -51,7 +51,7 @@ typedef struct
 FMGL_LoadableFont_ContextStruct;
 
 /**
- * Load font
+ * Load font from file
  */
 void FMGL_LoadableFont_Init
 (
@@ -68,5 +68,10 @@ void FMGL_LoadableFont_Init
 	uint32_t baseAddress
 );
 
+
+/**
+ * Get character width by character code
+ */
+uint16_t FMGL_LoadableFont_GetCharacterWidth(FMGL_LoadableFont_ContextStruct* context, uint8_t character);
 
 #endif /* FMGL_FONTS_LOADABLE_INCLUDE_LOADABLE_FONT_H_ */

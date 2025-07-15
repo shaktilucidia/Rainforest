@@ -119,6 +119,8 @@ void FMGL_LoadableFont_Init
 			L2HAL_Error(Generic);
 		}
 
+		context->MemoryWriteFunctionPtr(context->MemoryDriverContext, nextCharacterDataAddress, sizeof(characterData) - sizeof(characterData.Raster), (uint8_t*)&characterData);
+
 		/* Raster */
 		characterData.Raster = malloc(characterData.RasterSize);
 
@@ -133,11 +135,11 @@ void FMGL_LoadableFont_Init
 			L2HAL_Error(Generic);
 		}
 
-		context->MemoryWriteFunctionPtr(context->MemoryDriverContext, nextCharacterDataAddress, characterData.RasterSize, characterData.Raster);
+		context->MemoryWriteFunctionPtr(context->MemoryDriverContext, nextCharacterDataAddress + sizeof(characterData) - sizeof(characterData.Raster), characterData.RasterSize, characterData.Raster);
 
 		free(characterData.Raster);
 
-		nextCharacterDataAddress += characterData.RasterSize;
+		nextCharacterDataAddress += characterData.RasterSize + sizeof(characterData) - sizeof(characterData.Raster);
 	}
 
 	/* Done */
@@ -146,4 +148,37 @@ void FMGL_LoadableFont_Init
 	{
 		L2HAL_Error(Generic);
 	}
+}
+
+uint32_t FMGL_LoadableFont_GetCharacterDataAddress(FMGL_LoadableFont_ContextStruct* context, uint8_t character)
+{
+	FMGL_LoadableFont_FileCharacterTableItemStruct characterTableItem;
+	for (uint32_t i = 0; i < context->CharactersCount; i++)
+	{
+		context->MemoryReadFunctionPtr(context->MemoryDriverContext, context->BaseAddress + sizeof(characterTableItem) * i, sizeof(characterTableItem), (uint8_t*)&characterTableItem);
+
+		if (characterTableItem.Code == character)
+		{
+			return characterTableItem.Offset + context->BaseAddress;
+		}
+	}
+
+	L2HAL_Error(Generic); /* Hang up, we've got an unknown character */
+	return 0x00;
+}
+
+
+FMGL_LoadableFont_FileCharacterDataStruct FMGL_LoadableFont_GetCharacterData(FMGL_LoadableFont_ContextStruct* context, uint8_t character)
+{
+	uint32_t characterDataAddress = FMGL_LoadableFont_GetCharacterDataAddress(context, character);
+
+	FMGL_LoadableFont_FileCharacterDataStruct characterData;
+	context->MemoryReadFunctionPtr(context->MemoryDriverContext, characterDataAddress, sizeof(characterData) - sizeof(characterData.Raster), (uint8_t*)&characterData);
+
+	return characterData;
+}
+
+uint16_t FMGL_LoadableFont_GetCharacterWidth(FMGL_LoadableFont_ContextStruct* context, uint8_t character)
+{
+	return (uint16_t)FMGL_LoadableFont_GetCharacterData(context, character).Width;
 }
