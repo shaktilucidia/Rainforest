@@ -8,7 +8,7 @@
 #ifndef FMGL_FONTS_INCLUDE_FREESANS32_H_
 #define FMGL_FONTS_INCLUDE_FREESANS32_H_
 
-#include "../../include/fmgl.h"
+#include "../../../include/fmgl.h"
 
 /**
  * Character height.

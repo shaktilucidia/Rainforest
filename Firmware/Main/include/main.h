@@ -10,6 +10,7 @@
 
 #include "../libs/l2hal/l2hal_config.h"
 #include "hal.h"
+#include "filesystem.h"
 
 
 

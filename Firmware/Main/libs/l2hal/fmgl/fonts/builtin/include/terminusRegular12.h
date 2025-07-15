@@ -33,7 +33,7 @@
 #ifndef FMGL_INCLUDE_FONTS_TERMINUSREGULAR12_H_
 #define FMGL_INCLUDE_FONTS_TERMINUSREGULAR12_H_
 
-#include "../../include/fmgl.h"
+#include "../../../include/fmgl.h"
 
 /**
  * Character width.

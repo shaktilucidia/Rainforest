@@ -9,6 +9,7 @@
 #define INCLUDE_GLOBAL_VARIABLES_H_
 
 #include "../libs/l2hal/l2hal_config.h"
+#include "../libs/fatfs/ff.h"
 
 /* Put global variables (like contexts) here */
 
@@ -66,5 +67,15 @@ FMGL_API_DriverContext FmglContext;
  * SD-card context
  */
 L2HAL_SDCard_ContextStruct SDCardContext;
+
+/**
+ * SD card filesystem pointer
+ */
+FATFS* SDCardFsPtr = NULL;
+
+/**
+ * Main font context
+ */
+FMGL_LoadableFont_ContextStruct MainFontContext;
 
 #endif /* INCLUDE_GLOBAL_VARIABLES_H_ */
