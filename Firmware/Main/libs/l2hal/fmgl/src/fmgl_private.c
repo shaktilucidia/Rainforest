@@ -27,6 +27,7 @@
 
 #include "../include/fmgl_private.h"
 #include "../../include/l2hal_errors.h"
+#include <stdlib.h>
 
 bool FMGL_Priv_IsActiveXBMPixel(FMGL_API_XBMImage* image, uint16_t x, uint16_t y)
 {
@@ -59,10 +60,15 @@ void FMGL_Priv_RenderCharacter(FMGL_API_DriverContext* context, FMGL_API_FontSet
 	/* Generating XBM image structure */
 	FMGL_API_XBMImage characterImage;
 	characterImage.Height = fontSettings->Font->Height;
-	characterImage.Width = fontSettings->Font->GetCharacterWidth((uint8_t)character);
-	characterImage.Raster = fontSettings->Font->GetCharacterRaster((uint8_t)character);
+	characterImage.Width = fontSettings->Font->GetCharacterWidth(fontSettings->Font->Context, (uint8_t)character);
+	characterImage.Raster = fontSettings->Font->GetCharacterRaster(fontSettings->Font->Context, (uint8_t)character);
 
 	FMGL_API_RenderXBM(context, &characterImage, x, y, fontSettings->Scale, fontSettings->Scale, *fontSettings->FontColor, *fontSettings->BackgroundColor, *fontSettings->Transparency);
+
+	if (fontSettings->Font->IsLoadable)
+	{
+		free(characterImage.Raster);
+	}
 }
 
 void FMGL_Priv_RenderSubstring(FMGL_API_DriverContext* context, FMGL_API_FontSettings* fontSettings, uint16_t startPos, uint16_t length,

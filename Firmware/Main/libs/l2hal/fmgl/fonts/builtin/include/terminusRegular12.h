@@ -62,17 +62,19 @@ FMGL_API_Font FMGL_FontTerminusRegular12Init(void);
 
 /**
  * Returns character width.
+ * @param context Font context, have no meaning for built-in fonts
  * @param character Character code.
  * @return Character width.
  */
-uint16_t FMGL_FontTerminusRegular12GetCharacterWidth (uint8_t character);
+uint16_t FMGL_FontTerminusRegular12GetCharacterWidth (void* context, uint8_t character);
 
 /**
  * Returns character raster.
+ * @param context Font context, have no meaning for built-in fonts
  * @param character Character code.
  * @return Pointer to raster data.
  */
-const uint8_t* FMGL_FontTerminusRegular12GetCharacterRaster(uint8_t character);
+const uint8_t* FMGL_FontTerminusRegular12GetCharacterRaster(void* context, uint8_t character);
 
 /**
  * Characters rasters.

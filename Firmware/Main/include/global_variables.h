@@ -78,4 +78,9 @@ FATFS* SDCardFsPtr = NULL;
  */
 FMGL_LoadableFont_ContextStruct MainFontContext;
 
+/**
+ * Main font
+ */
+FMGL_API_FontSettings MainFont;
+
 #endif /* INCLUDE_GLOBAL_VARIABLES_H_ */

@@ -11,8 +11,9 @@
 #include "../../../../../fatfs/ff.h"
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
-void FMGL_LoadableFont_Init
+FMGL_API_Font FMGL_LoadableFont_Init
 (
 	FMGL_LoadableFont_ContextStruct* context,
 
@@ -148,6 +149,15 @@ void FMGL_LoadableFont_Init
 	{
 		L2HAL_Error(Generic);
 	}
+
+	FMGL_API_Font font;
+	font.Height = FMGL_LoadableFont_GetCharacterHeight(context, ' '); /* Use space as height base */
+	font.GetCharacterWidth = (uint16_t (*)(void *, uint8_t))&FMGL_LoadableFont_GetCharacterWidth;
+	font.GetCharacterRaster = (const uint8_t* (*)(void *, uint8_t))&FMGL_LoadableFont_GetCharacterRaster;
+	font.IsLoadable = true;
+	font.Context = context;
+
+	return font;
 }
 
 uint32_t FMGL_LoadableFont_GetCharacterDataAddress(FMGL_LoadableFont_ContextStruct* context, uint8_t character)
@@ -181,4 +191,23 @@ FMGL_LoadableFont_FileCharacterDataStruct FMGL_LoadableFont_GetCharacterData(FMG
 uint16_t FMGL_LoadableFont_GetCharacterWidth(FMGL_LoadableFont_ContextStruct* context, uint8_t character)
 {
 	return (uint16_t)FMGL_LoadableFont_GetCharacterData(context, character).Width;
+}
+
+uint16_t FMGL_LoadableFont_GetCharacterHeight(FMGL_LoadableFont_ContextStruct* context, uint8_t character)
+{
+	return (uint16_t)FMGL_LoadableFont_GetCharacterData(context, character).Height;
+}
+
+uint8_t* FMGL_LoadableFont_GetCharacterRaster(FMGL_LoadableFont_ContextStruct* context, uint8_t character)
+{
+	uint32_t characterDataAddress = FMGL_LoadableFont_GetCharacterDataAddress(context, character);
+
+	FMGL_LoadableFont_FileCharacterDataStruct characterData;
+	context->MemoryReadFunctionPtr(context->MemoryDriverContext, characterDataAddress, sizeof(characterData) - sizeof(characterData.Raster), (uint8_t*)&characterData);
+
+	uint8_t* raster = malloc(characterData.RasterSize);
+
+	context->MemoryReadFunctionPtr(context->MemoryDriverContext, characterDataAddress + sizeof(characterData) - sizeof(characterData.Raster), characterData.RasterSize, raster);
+
+	return raster;
 }

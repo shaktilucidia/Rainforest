@@ -179,7 +179,7 @@ int main(int argc, char* argv[])
 	FMGL_API_PushFramebuffer(&FmglContext);
 
 	/* Loading fonts */
-	FMGL_LoadableFont_Init
+	FMGL_API_Font mainFontData = FMGL_LoadableFont_Init
 	(
 		&MainFontContext,
 		"System/Fonts/FreeSans32.fmglfont",
@@ -189,12 +189,22 @@ int main(int argc, char* argv[])
 		100000
 	);
 
-	uint16_t charWidth = FMGL_LoadableFont_GetCharacterWidth(&MainFontContext, 'A');
+	MainFont.Font = &mainFontData;
+	MainFont.Scale = 1;
+	MainFont.CharactersSpacing = 0;
+	MainFont.LinesSpacing = 0;
+	MainFont.FontColor = &OnColor;
+	MainFont.BackgroundColor = &OffColor;
+	MainFont.Transparency = &transparencyMode;
 
-	uint8_t buffer[32];
-	sprintf(buffer, "Character width: %d", charWidth);
+	/* Main font ready */
+	FMGL_API_ClearScreen(&FmglContext);
 
-	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &font, 0, linePosition, &width, &height, false, buffer);
+	linePosition = 0;
+	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, "The quick brown fox jumps");
+	linePosition += height;
+
+	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, "over the lazy dog");
 	linePosition += height;
 	FMGL_API_PushFramebuffer(&FmglContext);
 

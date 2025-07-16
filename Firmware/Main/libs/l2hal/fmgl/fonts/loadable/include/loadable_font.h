@@ -9,6 +9,7 @@
 #define FMGL_FONTS_LOADABLE_INCLUDE_LOADABLE_FONT_H_
 
 #include <stdint.h>
+#include "../../../include/fmgl.h"
 
 /**
  * Loadable font context (characters data and so on are stored here)
@@ -53,7 +54,7 @@ FMGL_LoadableFont_ContextStruct;
 /**
  * Load font from file
  */
-void FMGL_LoadableFont_Init
+FMGL_API_Font FMGL_LoadableFont_Init
 (
 	FMGL_LoadableFont_ContextStruct* context,
 
@@ -68,10 +69,20 @@ void FMGL_LoadableFont_Init
 	uint32_t baseAddress
 );
 
-
 /**
  * Get character width by character code
  */
 uint16_t FMGL_LoadableFont_GetCharacterWidth(FMGL_LoadableFont_ContextStruct* context, uint8_t character);
+
+/**
+ * Get character height by character code
+ */
+uint16_t FMGL_LoadableFont_GetCharacterHeight(FMGL_LoadableFont_ContextStruct* context, uint8_t character);
+
+/**
+ * Get character raster by code. DO NOT FORGET TO FREE THE POINTER AFTER USE
+ */
+uint8_t* FMGL_LoadableFont_GetCharacterRaster(FMGL_LoadableFont_ContextStruct* context, uint8_t character);
+
 
 #endif /* FMGL_FONTS_LOADABLE_INCLUDE_LOADABLE_FONT_H_ */

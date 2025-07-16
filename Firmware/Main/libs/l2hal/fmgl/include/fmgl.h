@@ -205,14 +205,24 @@ typedef struct
 	uint8_t Height;
 
 	/**
+	 * Font context
+	 */
+	void* Context;
+
+	/**
 	 * Pointer to function returning character width.
 	 */
-	uint16_t (*GetCharacterWidth) (uint8_t character);
+	uint16_t (*GetCharacterWidth) (void* context, uint8_t character);
 
 	/**
 	 *Pointer to function, returning character raster.
 	 */
-	const uint8_t* (*GetCharacterRaster) (uint8_t character);
+	const uint8_t* (*GetCharacterRaster) (void* context, uint8_t character);
+
+	/**
+	 * True if this font is loadable, which requires memory management
+	 */
+	bool IsLoadable;
 } FMGL_API_Font;
 
 /**

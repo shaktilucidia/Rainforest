@@ -27,12 +27,12 @@
 
 #include "../include/terminusRegular12.h"
 
-uint16_t FMGL_FontTerminusRegular12GetCharacterWidth (uint8_t character)
+uint16_t FMGL_FontTerminusRegular12GetCharacterWidth (void* context, uint8_t character)
 {
 	return FMGL_FONT_TERMINUS_REGULAR_12_CHARACTER_WIDTH;
 }
 
-const uint8_t* FMGL_FontTerminusRegular12GetCharacterRaster(uint8_t character)
+const uint8_t* FMGL_FontTerminusRegular12GetCharacterRaster(void* context, uint8_t character)
 {
 	if (character < FMGL_FONT_TERMINUS_REGULAR_12_FIRST_CHARACTER_CODE)
 	{
@@ -49,6 +49,8 @@ FMGL_API_Font FMGL_FontTerminusRegular12Init(void)
 	font.Height = FMGL_FONT_TERMINUS_REGULAR_12_CHARACTER_HEIGHT;
 	font.GetCharacterWidth = &FMGL_FontTerminusRegular12GetCharacterWidth;
 	font.GetCharacterRaster = &FMGL_FontTerminusRegular12GetCharacterRaster;
+	font.IsLoadable = false;
+	font.Context = NULL;
 
 	return font;
 }
