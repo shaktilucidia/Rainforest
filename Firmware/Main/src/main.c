@@ -203,27 +203,22 @@ int main(int argc, char* argv[])
 
 	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, "over the lazy dog");
 	linePosition += height;
-	FMGL_API_PushFramebuffer(&FmglContext);
 
 	// Широкая электрификация
 	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, "\xFB\xC9\xD2\xCF\xCB\xC1\xD1 \xDC\xCC\xC5\xCB\xD4\xD2\xC9\xC6\xC9\xCB\xC1\xC3\xC9\xD1");
 	linePosition += height;
-	FMGL_API_PushFramebuffer(&FmglContext);
 
 	// южных губерний даст мощный толчок подъёму сельского хозяйства
 	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, "\xC0\xD6\xCE\xD9\xC8 \xC7\xD5\xC2\xC5\xD2\xCE\xC9\xCA \xC4\xC1\xD3\xD4");
 	linePosition += height;
-	FMGL_API_PushFramebuffer(&FmglContext);
 
 	// мощный толчок подъёму
 	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, "\xCD\xCF\xDD\xCE\xD9\xCA \xD4\xCF\xCC\xDE\xCF\xCB \xD0\xCF\xC4\xDF\xA3\xCD\xD5");
 	linePosition += height;
-	FMGL_API_PushFramebuffer(&FmglContext);
 
 	// сельского хозяйства
 	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, "\xD3\xC5\xCC\xD8\xD3\xCB\xCF\xC7\xCF \xC8\xCF\xDA\xD1\xCA\xD3\xD4\xD7\xC1");
 	linePosition += height;
-	FMGL_API_PushFramebuffer(&FmglContext);
 
 	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, "0123456789!@#$%^&*()-+");
 	linePosition += height;
