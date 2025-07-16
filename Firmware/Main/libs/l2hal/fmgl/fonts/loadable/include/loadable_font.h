@@ -11,6 +11,11 @@
 #include <stdint.h>
 #include "../../../include/fmgl.h"
 
+/*
+ * We are able to load not more than this number of characters
+ */
+#define FMGL_LOADABLE_FONT_MAX_CHARACTERS_COUNT 256
+
 /**
  * Loadable font context (characters data and so on are stored here)
  */
@@ -48,6 +53,11 @@ typedef struct
 	 * How much characters font have
 	 */
 	uint32_t CharactersCount;
+
+	/**
+	 * Character code -> Character data address
+	 */
+	uint32_t CharacterDataAddresses[FMGL_LOADABLE_FONT_MAX_CHARACTERS_COUNT];
 }
 FMGL_LoadableFont_ContextStruct;
 

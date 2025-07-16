@@ -77,7 +77,9 @@ FMGL_API_Font FMGL_LoadableFont_Init
 	}
 
 
-	/* Reading characters table items */
+	/* Reading characters table items to get offsets */
+	memset(context->CharacterDataAddresses, 0, FMGL_LOADABLE_FONT_MAX_CHARACTERS_COUNT);
+
 	FMGL_LoadableFont_FileCharacterTableItemStruct characterTableItem;
 	for (uint32_t i = 0; i < context->CharactersCount; i++)
 	{
@@ -98,12 +100,21 @@ FMGL_API_Font FMGL_LoadableFont_Init
 			L2HAL_Error(Generic);
 		}
 
-		characterTableItem.Offset -= 16; /* We have no header in memory */
-		context->MemoryWriteFunctionPtr(context->MemoryDriverContext, context->BaseAddress + sizeof(characterTableItem) * i, sizeof(characterTableItem), (uint8_t*)&characterTableItem);
+		/* We have no header and characters table in external memory, so -16 - 8 * CharactersCount */
+		context->CharacterDataAddresses[characterTableItem.Code] = context->BaseAddress + characterTableItem.Offset - 16 - 8 * context->CharactersCount;
+	}
+
+	/* Filling nonexistent characters */
+	for (uint32_t i = 0; i < FMGL_LOADABLE_FONT_MAX_CHARACTERS_COUNT; i++)
+	{
+		if (0 == context->CharacterDataAddresses[i])
+		{
+			context->CharacterDataAddresses[i] = context->CharacterDataAddresses[0]; /* Character with code 0 is nonexistent character */
+		}
 	}
 
 	/* Reading characters data */
-	uint32_t nextCharacterDataAddress = context->BaseAddress + 8 * context->CharactersCount;
+	uint32_t nextCharacterDataAddress = context->BaseAddress;
 
 	FMGL_LoadableFont_FileCharacterDataStruct characterData;
 	for (uint32_t i = 0; i < context->CharactersCount; i++)
@@ -160,30 +171,11 @@ FMGL_API_Font FMGL_LoadableFont_Init
 	return font;
 }
 
-uint32_t FMGL_LoadableFont_GetCharacterDataAddress(FMGL_LoadableFont_ContextStruct* context, uint8_t character)
-{
-	FMGL_LoadableFont_FileCharacterTableItemStruct characterTableItem;
-	for (uint32_t i = 0; i < context->CharactersCount; i++)
-	{
-		context->MemoryReadFunctionPtr(context->MemoryDriverContext, context->BaseAddress + sizeof(characterTableItem) * i, sizeof(characterTableItem), (uint8_t*)&characterTableItem);
-
-		if (characterTableItem.Code == character)
-		{
-			return characterTableItem.Offset + context->BaseAddress;
-		}
-	}
-
-	L2HAL_Error(Generic); /* Hang up, we've got an unknown character */
-	return 0x00;
-}
-
 
 FMGL_LoadableFont_FileCharacterDataStruct FMGL_LoadableFont_GetCharacterData(FMGL_LoadableFont_ContextStruct* context, uint8_t character)
 {
-	uint32_t characterDataAddress = FMGL_LoadableFont_GetCharacterDataAddress(context, character);
-
 	FMGL_LoadableFont_FileCharacterDataStruct characterData;
-	context->MemoryReadFunctionPtr(context->MemoryDriverContext, characterDataAddress, sizeof(characterData) - sizeof(characterData.Raster), (uint8_t*)&characterData);
+	context->MemoryReadFunctionPtr(context->MemoryDriverContext, context->CharacterDataAddresses[character], sizeof(characterData) - sizeof(characterData.Raster), (uint8_t*)&characterData);
 
 	return characterData;
 }
@@ -200,7 +192,7 @@ uint16_t FMGL_LoadableFont_GetCharacterHeight(FMGL_LoadableFont_ContextStruct* c
 
 uint8_t* FMGL_LoadableFont_GetCharacterRaster(FMGL_LoadableFont_ContextStruct* context, uint8_t character)
 {
-	uint32_t characterDataAddress = FMGL_LoadableFont_GetCharacterDataAddress(context, character);
+	uint32_t characterDataAddress = context->CharacterDataAddresses[character];
 
 	FMGL_LoadableFont_FileCharacterDataStruct characterData;
 	context->MemoryReadFunctionPtr(context->MemoryDriverContext, characterDataAddress, sizeof(characterData) - sizeof(characterData.Raster), (uint8_t*)&characterData);

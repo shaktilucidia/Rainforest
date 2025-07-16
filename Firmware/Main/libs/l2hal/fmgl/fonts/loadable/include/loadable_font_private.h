@@ -79,11 +79,6 @@ typedef struct
 FMGL_LoadableFont_FileCharacterDataStruct;
 
 /**
- * Get character data address by character code. Will call L2HAL_Error() if character is not found
- */
-uint32_t FMGL_LoadableFont_GetCharacterDataAddress(FMGL_LoadableFont_ContextStruct* context, uint8_t character);
-
-/**
  * Get character data by character code. Will not load raster
  */
 FMGL_LoadableFont_FileCharacterDataStruct FMGL_LoadableFont_GetCharacterData(FMGL_LoadableFont_ContextStruct* context, uint8_t character);

@@ -61,9 +61,6 @@ FMGL_API_ColorStruct OnColor = { .R = 0x00, .G = 0x00, .B = 0x00 };
 
 int main(int argc, char* argv[])
 {
-	// At this stage the system clock should have already been configured
-	// at high speed.
-
 	/* Mandatory for STM32 HAL */
 	HAL_Init();
 
