@@ -42,7 +42,15 @@ enum L2HAL_BME280_I2C_OVERSAMPLING_MODE
  */
 typedef struct
 {
-	double T1;
+	/**
+	 * Original T1 from Bosch datasheet, divided by 1024.0
+	 */
+	double T1_DIV_1K;
+
+	/**
+	 * Original T1 from Bosch datasheet, divided by 8192.0
+	 */
+	double T1_DIV_8K;
 
 	double T2;
 
@@ -78,19 +86,19 @@ typedef struct
 typedef struct
 {
 	/**
-	 * Raw temperature
+	 * Raw temperature (always shifted to 20 bits-wide)
 	 */
-	int32_t temperature;
+	int32_t Temperature;
 
 	/**
 	 * Raw humidity
 	 */
-	uint16_t humidity;
+	uint16_t Humidity;
 
 	/**
-	 * Raw pressure
+	 * Raw pressure (always shifted to 20 bits-wide)
 	 */
-	uint32_t pressure;
+	uint32_t Pressure;
 
 } L2HAL_BME280_I2C_RawMeasurementsStruct;
 

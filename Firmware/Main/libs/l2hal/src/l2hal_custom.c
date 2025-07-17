@@ -279,7 +279,7 @@ void L2HAL_SetupI2C(void)
 	__HAL_RCC_I2C1_CLK_ENABLE();
 
 	I2C1_Handle.Instance = I2C1;
-	I2C1_Handle.Init.ClockSpeed = 10000;
+	I2C1_Handle.Init.ClockSpeed = 100000;
 	I2C1_Handle.Init.DutyCycle = I2C_DUTYCYCLE_2;
 	I2C1_Handle.Init.OwnAddress1 = 0x00;
 	I2C1_Handle.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;

@@ -166,7 +166,8 @@ int main(int argc, char* argv[])
 	linePosition += height;
 	FMGL_API_PushFramebuffer(&FmglContext);
 
-	HAL_HardwareSelfTest();
+	//TODO: Enable me
+	//HAL_HardwareSelfTest();
 
 	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &font, 0, linePosition, &width, &height, false, "OK, mounting SD card...");
 	linePosition += height;
@@ -226,19 +227,19 @@ int main(int argc, char* argv[])
 		linePosition = 0;
 
 		/* Temperature */
-		double temperatureKelvin = L2HAL_BME280_I2C_GetTemperatureKelvin(&LocalSensor, (int32_t)(rawMeasurements.temperature << 4));
+		double temperatureKelvin = L2HAL_BME280_I2C_GetTemperatureKelvin(&LocalSensor, (int32_t)rawMeasurements.Temperature);
 
 		sprintf(buffer, "Temperature: %f", (float)(temperatureKelvin - L2HAL_BME280_I2C_ZERO_CELSIUS_IN_KELVINS));
 		FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, buffer);
 		linePosition += height;
 
 		/* Humidity */
-		sprintf(buffer, "Humidity: %d", rawMeasurements.humidity);
+		sprintf(buffer, "Humidity: %d", rawMeasurements.Humidity);
 		FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, buffer);
 		linePosition += height;
 
 		/* Pressure */
-		sprintf(buffer, "Pressure: %d", rawMeasurements.pressure);
+		sprintf(buffer, "Pressure: %d", rawMeasurements.Pressure);
 		FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, buffer);
 		linePosition += height;
 
