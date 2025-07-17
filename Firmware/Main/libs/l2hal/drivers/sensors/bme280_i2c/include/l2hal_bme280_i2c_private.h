@@ -23,6 +23,8 @@
 /**
  * Registers
  */
+#define L2HAL_BME280_I2C_REGISTER_BASE_TEMPERATURE_COMPENSATION 0x88
+
 #define L2HAL_BME280_I2C_REGISTER_ID 0xD0
 #define L2HAL_BME280_I2C_REGISTER_RESET 0xE0
 #define L2HAL_BME280_I2C_REGISTER_HUMIDITY_CONTROL 0xF2
@@ -40,6 +42,19 @@
  * Send this to reset register to reset device
  */
 #define L2HAL_BME280_I2C_RESET_COMMAND 0xB6
+
+/**
+ * Temperature compensation data
+ */
+typedef struct
+{
+	uint16_t T1;
+
+	int16_t T2;
+
+	int16_t T3;
+
+} L2HAL_BME280_I2C_TemperatureCompensationRawStruct;
 
 /**
  * Read data from count registers starting from baseAddress into buffer

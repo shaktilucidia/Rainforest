@@ -29,6 +29,17 @@ void L2HAL_BME280_I2C_Init(L2HAL_BME280_I2C_ContextStruct* context, I2C_HandleTy
 	}
 
 	L2HAL_BME280_I2C_ResetSensor(context);
+
+	/* Waiting for NVM data copied to registers */
+	while (!L2HAL_BME280_I2C_IsMeasurementCompleted(context)) {}
+
+	/* Reading temperature compensation */
+	L2HAL_BME280_I2C_TemperatureCompensationRawStruct temperatureCompensationRaw;
+	L2HAL_BME280_I2C_ReadRegisters(context, L2HAL_BME280_I2C_REGISTER_BASE_TEMPERATURE_COMPENSATION, (uint8_t*)&temperatureCompensationRaw, sizeof(temperatureCompensationRaw));
+
+	context->temperatureCompensationData.T1 = (double)temperatureCompensationRaw.T1;
+	context->temperatureCompensationData.T2 = (double)temperatureCompensationRaw.T2;
+	context->temperatureCompensationData.T3 = (double)temperatureCompensationRaw.T3;
 }
 
 void L2HAL_BME280_I2C_ReadRegisters(L2HAL_BME280_I2C_ContextStruct* context, uint8_t baseAddress, uint8_t* buffer, uint8_t count)
@@ -52,13 +63,19 @@ void L2HAL_BME280_I2C_ResetSensor(L2HAL_BME280_I2C_ContextStruct* context)
 	L2HAL_BME280_I2C_WriteRegister(context, L2HAL_BME280_I2C_REGISTER_RESET, L2HAL_BME280_I2C_RESET_COMMAND);
 }
 
-void L2HAL_BME280_I2C_StartForcedMeasurement(L2HAL_BME280_I2C_ContextStruct* context)
+void L2HAL_BME280_I2C_StartForcedMeasurement
+(
+	L2HAL_BME280_I2C_ContextStruct* context,
+	enum L2HAL_BME280_I2C_OVERSAMPLING_MODE temperatureOversampling,
+	enum L2HAL_BME280_I2C_OVERSAMPLING_MODE humidityOversampling,
+	enum L2HAL_BME280_I2C_OVERSAMPLING_MODE pressureOversampling
+)
 {
 	/* Control humidity */
-	L2HAL_BME280_I2C_WriteRegister(context, L2HAL_BME280_I2C_REGISTER_HUMIDITY_CONTROL, 0b0000001); /* Oversampling x1*/
+	L2HAL_BME280_I2C_WriteRegister(context, L2HAL_BME280_I2C_REGISTER_HUMIDITY_CONTROL, humidityOversampling);
 
 	/* Control temperature and pressure and run measurement */
-	L2HAL_BME280_I2C_WriteRegister(context, L2HAL_BME280_I2C_REGISTER_MEASUREMENT_CONTROL, 0b00100101); /* Oversampling x1, forced mode */
+	L2HAL_BME280_I2C_WriteRegister(context, L2HAL_BME280_I2C_REGISTER_MEASUREMENT_CONTROL, (temperatureOversampling << 5) | (pressureOversampling << 2) | 0b01);
 
 }
 
@@ -92,3 +109,18 @@ L2HAL_BME280_I2C_RawMeasurementsStruct L2HAL_BME280_I2C_GetMeasurementRaw(L2HAL_
 
 	return result;
 }
+
+double L2HAL_BME280_I2C_GetTemperatureKelvin(L2HAL_BME280_I2C_ContextStruct* context, double rawTemperature)
+{
+	double var1;
+	double var2;
+
+	var1 = (rawTemperature / 16384.0 - (context->temperatureCompensationData.T1) / 1024.0) * context->temperatureCompensationData.T2;
+
+	var2 = ((rawTemperature / 131072.0 - (context->temperatureCompensationData.T1) / 8192.0)
+			* (rawTemperature / 131072.0 - (context->temperatureCompensationData.T1) / 8192.0))
+			* context->temperatureCompensationData.T3;
+
+	return (var1 + var2) / 5120.0 + L2HAL_BME280_I2C_ZERO_CELSIUS_IN_KELVINS;
+}
+

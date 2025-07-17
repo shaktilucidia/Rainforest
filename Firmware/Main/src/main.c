@@ -190,7 +190,7 @@ int main(int argc, char* argv[])
 	FMGL_API_Font mainFontData = FMGL_LoadableFont_Init
 	(
 		&MainFontContext,
-		"System/Fonts/ComicSans32.fmglfont",
+		"System/Fonts/FreeSans32.fmglfont",
 		&RamContext,
 		(void (*)(void*, uint32_t, uint32_t, uint8_t*))&L2HAL_LY68L6400_MemoryWrite,
 		(void (*)(void*, uint32_t, uint32_t, uint8_t*))&L2HAL_LY68L6400_MemoryRead,
@@ -210,7 +210,14 @@ int main(int argc, char* argv[])
 
 	while(true)
 	{
-		L2HAL_BME280_I2C_StartForcedMeasurement(&LocalSensor);
+		L2HAL_BME280_I2C_StartForcedMeasurement
+		(
+			&LocalSensor,
+			L2HAL_BME280_I2C_OVERSAMPLING_1,
+			L2HAL_BME280_I2C_OVERSAMPLING_1,
+			L2HAL_BME280_I2C_OVERSAMPLING_1
+		);
+
 		while (!L2HAL_BME280_I2C_IsMeasurementCompleted(&LocalSensor)) {}
 
 		L2HAL_BME280_I2C_RawMeasurementsStruct rawMeasurements = L2HAL_BME280_I2C_GetMeasurementRaw(&LocalSensor);
@@ -219,7 +226,9 @@ int main(int argc, char* argv[])
 		linePosition = 0;
 
 		/* Temperature */
-		sprintf(buffer, "Temperature: %d", rawMeasurements.temperature);
+		double temperatureKelvin = L2HAL_BME280_I2C_GetTemperatureKelvin(&LocalSensor, (int32_t)(rawMeasurements.temperature << 4));
+
+		sprintf(buffer, "Temperature: %f", (float)(temperatureKelvin - L2HAL_BME280_I2C_ZERO_CELSIUS_IN_KELVINS));
 		FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, buffer);
 		linePosition += height;
 

@@ -22,6 +22,34 @@
  */
 #define L2HAL_BME280_I2C_ALTERNATE_ADDRESS (0x77 << 1)
 
+#define L2HAL_BME280_I2C_ZERO_CELSIUS_IN_KELVINS (273.15)
+
+/**
+ * Oversampling modes for all three subsensors
+ */
+enum L2HAL_BME280_I2C_OVERSAMPLING_MODE
+{
+	L2HAL_BME280_I2C_OVERSAMPLING_DISABLE_SENSOR = 0b000,
+	L2HAL_BME280_I2C_OVERSAMPLING_1 = 0b001,
+	L2HAL_BME280_I2C_OVERSAMPLING_2 = 0b010,
+	L2HAL_BME280_I2C_OVERSAMPLING_4 = 0b011,
+	L2HAL_BME280_I2C_OVERSAMPLING_8 = 0b100,
+	L2HAL_BME280_I2C_OVERSAMPLING_16 = 0b101,
+};
+
+/**
+ * Temperature compensation data
+ */
+typedef struct
+{
+	double T1;
+
+	double T2;
+
+	double T3;
+
+} L2HAL_BME280_I2C_TemperatureCompensationStruct;
+
 /**
  * Sensor context
  */
@@ -37,6 +65,11 @@ typedef struct
 	 */
 	uint8_t BusAddress;
 
+	/**
+	 * Data for temperature compensation
+	 */
+	L2HAL_BME280_I2C_TemperatureCompensationStruct temperatureCompensationData;
+
 } L2HAL_BME280_I2C_ContextStruct;
 
 /**
@@ -47,7 +80,7 @@ typedef struct
 	/**
 	 * Raw temperature
 	 */
-	uint32_t temperature;
+	int32_t temperature;
 
 	/**
 	 * Raw humidity
@@ -60,7 +93,6 @@ typedef struct
 	uint32_t pressure;
 
 } L2HAL_BME280_I2C_RawMeasurementsStruct;
-
 
 /**
  * Initialize sensor (we support only forced mode for now)
@@ -75,7 +107,13 @@ void L2HAL_BME280_I2C_ResetSensor(L2HAL_BME280_I2C_ContextStruct* context);
 /**
  * Wake up sensor and start forced measurement, when measurement will be completed sensor will go to sleep again
  */
-void L2HAL_BME280_I2C_StartForcedMeasurement(L2HAL_BME280_I2C_ContextStruct* context);
+void L2HAL_BME280_I2C_StartForcedMeasurement
+(
+	L2HAL_BME280_I2C_ContextStruct* context,
+	enum L2HAL_BME280_I2C_OVERSAMPLING_MODE temperatureOversampling,
+	enum L2HAL_BME280_I2C_OVERSAMPLING_MODE humidityOversampling,
+	enum L2HAL_BME280_I2C_OVERSAMPLING_MODE pressureOversampling
+);
 
 /**
  * Call it after L2HAL_BME280_I2C_StartForcedMeasurement to check if measurement completed
@@ -86,6 +124,11 @@ bool L2HAL_BME280_I2C_IsMeasurementCompleted(L2HAL_BME280_I2C_ContextStruct* con
  * Get raw measurement data
  */
 L2HAL_BME280_I2C_RawMeasurementsStruct L2HAL_BME280_I2C_GetMeasurementRaw(L2HAL_BME280_I2C_ContextStruct* context);
+
+/**
+ * Get human-readable temperature in Kelvins
+ */
+double L2HAL_BME280_I2C_GetTemperatureKelvin(L2HAL_BME280_I2C_ContextStruct* context, double rawTemperature);
 
 
 #endif /* DRIVERS_SENSORS_BME280_I2C_INCLUDE_L2HAL_BME280_I2C_H_ */
