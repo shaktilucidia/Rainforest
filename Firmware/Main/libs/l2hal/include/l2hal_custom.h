@@ -50,12 +50,16 @@ extern L2HAL_SSD1683_ContextStruct DisplayContext;
 
 extern L2HAL_SDCard_ContextStruct SDCardContext;
 
+extern I2C_HandleTypeDef I2C1_Handle;
+
 /**
  * Put custom hardware initialization stuff here,
  */
 void L2HAL_InitCustomHardware(void);
 
-/* SPI-related stuff */
+/**
+ * SPI-related stuff
+ */
 void L2HAL_SetupSPI(void);
 void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi);
 void HAL_SPI_MspDeInit(SPI_HandleTypeDef *hspi);
@@ -65,5 +69,10 @@ void L2HAL_PSRAMDmaCompleted(DMA_HandleTypeDef *hdma); /* Called when transmissi
 void L2HAL_DisplayDmaCompleted(DMA_HandleTypeDef *hdma); /* Called when transmission via Display SPI is completed */
 
 void L2HAL_SDCardDmaCompleted(DMA_HandleTypeDef *hdma); /* Called when transmission via SDCard SPI is completed */
+
+/**
+ * I2C-related stuff
+ */
+void L2HAL_SetupI2C(void);
 
 #endif /* L2HAL_INCLUDE_L2HAL_CUSTOM_H_ */

@@ -83,4 +83,14 @@ FMGL_LoadableFont_ContextStruct MainFontContext;
  */
 FMGL_API_FontSettings MainFont;
 
+/**
+ * I2C1 bus handle
+ */
+I2C_HandleTypeDef I2C1_Handle = { 0 };
+
+/**
+ * Local sensor
+ */
+L2HAL_BME280_I2C_ContextStruct LocalSensor;
+
 #endif /* INCLUDE_GLOBAL_VARIABLES_H_ */

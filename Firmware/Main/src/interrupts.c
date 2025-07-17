@@ -46,3 +46,13 @@ void DMA1_Stream3_IRQHandler(void)
 {
 	HAL_DMA_IRQHandler(SPI2Handle.hdmarx);
 }
+
+void I2C1_EV_IRQHandler(void)
+{
+	HAL_I2C_EV_IRQHandler(&I2C1_Handle);
+}
+
+void I2C1_ER_IRQHandler(void)
+{
+	HAL_I2C_ER_IRQHandler(&I2C1_Handle);
+}

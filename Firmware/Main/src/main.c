@@ -102,6 +102,14 @@ int main(int argc, char* argv[])
 		3 /* Do periodic full refresh each this frames count */
 	);
 
+	/* Local sensor initialization */
+	L2HAL_BME280_I2C_Init
+	(
+		&LocalSensor,
+		&I2C1_Handle,
+		L2HAL_BME280_I2C_MAIN_ADDRESS
+	);
+
 	/* SD Card driver initialization */
 	enum L2HAL_SDCard_InitResult sdCardInitResult = L2HAL_SDCard_Init
 	(
@@ -120,9 +128,6 @@ int main(int argc, char* argv[])
 	{
 		L2HAL_Error(Generic); /* Failed to initialize SD-card */
 	}
-
-	/* Hardware self-test */
-	HAL_HardwareSelfTest();
 
 	/* Attaching FMGL to display */
 	FmglContext = FMGL_API_AttachToDriver
@@ -156,8 +161,14 @@ int main(int argc, char* argv[])
 	uint16_t width;
 	uint16_t height;
 
-	/* First message */
-	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &font, 0, linePosition, &width, &height, false, "Hardware self-test OK, mounting SD card...");
+	/* Hardware self-test */
+	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &font, 0, linePosition, &width, &height, false, "Hardware self-test, it will take a while...");
+	linePosition += height;
+	FMGL_API_PushFramebuffer(&FmglContext);
+
+	HAL_HardwareSelfTest();
+
+	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &font, 0, linePosition, &width, &height, false, "OK, mounting SD card...");
 	linePosition += height;
 	FMGL_API_PushFramebuffer(&FmglContext);
 
@@ -179,7 +190,7 @@ int main(int argc, char* argv[])
 	FMGL_API_Font mainFontData = FMGL_LoadableFont_Init
 	(
 		&MainFontContext,
-		"System/Fonts/FreeSans32.fmglfont",
+		"System/Fonts/ComicSans32.fmglfont",
 		&RamContext,
 		(void (*)(void*, uint32_t, uint32_t, uint8_t*))&L2HAL_LY68L6400_MemoryWrite,
 		(void (*)(void*, uint32_t, uint32_t, uint8_t*))&L2HAL_LY68L6400_MemoryRead,
@@ -197,36 +208,33 @@ int main(int argc, char* argv[])
 	/* Main font ready */
 	FMGL_API_ClearScreen(&FmglContext);
 
-	linePosition = 0;
-	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, "The quick brown fox jumps");
-	linePosition += height;
-
-	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, "over the lazy dog");
-	linePosition += height;
-
-	// Широкая электрификация
-	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, "\xFB\xC9\xD2\xCF\xCB\xC1\xD1 \xDC\xCC\xC5\xCB\xD4\xD2\xC9\xC6\xC9\xCB\xC1\xC3\xC9\xD1");
-	linePosition += height;
-
-	// южных губерний даст мощный толчок подъёму сельского хозяйства
-	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, "\xC0\xD6\xCE\xD9\xC8 \xC7\xD5\xC2\xC5\xD2\xCE\xC9\xCA \xC4\xC1\xD3\xD4");
-	linePosition += height;
-
-	// мощный толчок подъёму
-	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, "\xCD\xCF\xDD\xCE\xD9\xCA \xD4\xCF\xCC\xDE\xCF\xCB \xD0\xCF\xC4\xDF\xA3\xCD\xD5");
-	linePosition += height;
-
-	// сельского хозяйства
-	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, "\xD3\xC5\xCC\xD8\xD3\xCB\xCF\xC7\xCF \xC8\xCF\xDA\xD1\xCA\xD3\xD4\xD7\xC1");
-	linePosition += height;
-
-	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, "0123456789!@#$%^&*()-+");
-	linePosition += height;
-	FMGL_API_PushFramebuffer(&FmglContext);
-
 	while(true)
 	{
+		L2HAL_BME280_I2C_StartForcedMeasurement(&LocalSensor);
+		while (!L2HAL_BME280_I2C_IsMeasurementCompleted(&LocalSensor)) {}
 
+		L2HAL_BME280_I2C_RawMeasurementsStruct rawMeasurements = L2HAL_BME280_I2C_GetMeasurementRaw(&LocalSensor);
+
+		char buffer[32];
+		linePosition = 0;
+
+		/* Temperature */
+		sprintf(buffer, "Temperature: %d", rawMeasurements.temperature);
+		FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, buffer);
+		linePosition += height;
+
+		/* Humidity */
+		sprintf(buffer, "Humidity: %d", rawMeasurements.humidity);
+		FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, buffer);
+		linePosition += height;
+
+		/* Pressure */
+		sprintf(buffer, "Pressure: %d", rawMeasurements.pressure);
+		FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, buffer);
+		linePosition += height;
+
+
+		FMGL_API_PushFramebuffer(&FmglContext);
 	}
 }
 
