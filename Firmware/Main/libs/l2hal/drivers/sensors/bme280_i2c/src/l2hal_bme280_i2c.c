@@ -47,13 +47,13 @@ void L2HAL_BME280_I2C_Init(L2HAL_BME280_I2C_ContextStruct* context, I2C_HandleTy
 	L2HAL_BME280_I2C_ReadRegisters(context, L2HAL_BME280_I2C_REGISTER_BASE_PRESSURE_COMPENSATION, (uint8_t*)&pressureCompensationRaw, sizeof(pressureCompensationRaw));
 
 	context->PressureCompensationData.P1 = (double)pressureCompensationRaw.P1;
-	context->PressureCompensationData.P2 = (double)pressureCompensationRaw.P2;
-	context->PressureCompensationData.P3 = (double)pressureCompensationRaw.P3 / 524288.0;
+	context->PressureCompensationData.P2 = (double)pressureCompensationRaw.P2 / 524288.0;
+	context->PressureCompensationData.P3 = (double)pressureCompensationRaw.P3 / (524288.0 * 524288.0);
 	context->PressureCompensationData.P4 = (double)pressureCompensationRaw.P4 * 65536.0;
 	context->PressureCompensationData.P5 = (double)pressureCompensationRaw.P5 * 2.0;
 	context->PressureCompensationData.P6 = (double)pressureCompensationRaw.P6 / 32768.0;
 	context->PressureCompensationData.P7 = (double)pressureCompensationRaw.P7;
-	context->PressureCompensationData.P8 = (double)pressureCompensationRaw.P8;
+	context->PressureCompensationData.P8 = (double)pressureCompensationRaw.P8 / 32768.0;
 	context->PressureCompensationData.P9 = (double)pressureCompensationRaw.P9 / 2147483648.0;
 }
 
@@ -158,7 +158,7 @@ L2HAL_BME280_I2C_CreatureReadableMeasurementsStruct L2HAL_BME280_I2C_GetCreature
 	double p_var2 = p_var1 * p_var1 * context->PressureCompensationData.P6;
 	p_var2 = p_var2 + p_var1 * context->PressureCompensationData.P5;
 	p_var2 = (p_var2 / 4.0) + context->PressureCompensationData.P4;
-	p_var1 = (context->PressureCompensationData.P3 * p_var1 * p_var1 + context->PressureCompensationData.P2 * p_var1) / 524288.0;
+	p_var1 = context->PressureCompensationData.P3 * p_var1 * p_var1 + context->PressureCompensationData.P2 * p_var1;
 	p_var1 = (1.0 + p_var1 / 32768.0) * context->PressureCompensationData.P1;
 
 	if (p_var1 == 0.0)
@@ -169,7 +169,7 @@ L2HAL_BME280_I2C_CreatureReadableMeasurementsStruct L2HAL_BME280_I2C_GetCreature
 	result.Pressure = 1048576.0 - (double)rawMeasurements.Pressure;
 	result.Pressure = (result.Pressure - (p_var2 / 4096.0)) * 6250.0 / p_var1;
 	p_var1 = context->PressureCompensationData.P9 * result.Pressure * result.Pressure;
-	p_var2 = result.Pressure * context->PressureCompensationData.P8 / 32768.0;
+	p_var2 = result.Pressure * context->PressureCompensationData.P8;
 	result.Pressure = result.Pressure + (p_var1 + p_var2 + context->PressureCompensationData.P7) / 16.0;
 
 	return result;
