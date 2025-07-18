@@ -37,10 +37,24 @@ void L2HAL_BME280_I2C_Init(L2HAL_BME280_I2C_ContextStruct* context, I2C_HandleTy
 	L2HAL_BME280_I2C_TemperatureCompensationRawStruct temperatureCompensationRaw;
 	L2HAL_BME280_I2C_ReadRegisters(context, L2HAL_BME280_I2C_REGISTER_BASE_TEMPERATURE_COMPENSATION, (uint8_t*)&temperatureCompensationRaw, sizeof(temperatureCompensationRaw));
 
-	context->temperatureCompensationData.T1_DIV_1K = (double)temperatureCompensationRaw.T1 / 1024.0;
-	context->temperatureCompensationData.T1_DIV_8K = (double)temperatureCompensationRaw.T1 / 8192.0;
-	context->temperatureCompensationData.T2 = (double)temperatureCompensationRaw.T2;
-	context->temperatureCompensationData.T3 = (double)temperatureCompensationRaw.T3;
+	context->TemperatureCompensationData.T1_DIV_1K = (double)temperatureCompensationRaw.T1 / 1024.0;
+	context->TemperatureCompensationData.T1_DIV_8K = (double)temperatureCompensationRaw.T1 / 8192.0;
+	context->TemperatureCompensationData.T2 = (double)temperatureCompensationRaw.T2;
+	context->TemperatureCompensationData.T3 = (double)temperatureCompensationRaw.T3;
+
+	/* Reading pressure compensation */
+	L2HAL_BME280_I2C_PressureCompensationRawStruct pressureCompensationRaw;
+	L2HAL_BME280_I2C_ReadRegisters(context, L2HAL_BME280_I2C_REGISTER_BASE_PRESSURE_COMPENSATION, (uint8_t*)&pressureCompensationRaw, sizeof(pressureCompensationRaw));
+
+	context->PressureCompensationData.P1 = (double)pressureCompensationRaw.P1;
+	context->PressureCompensationData.P2 = (double)pressureCompensationRaw.P2;
+	context->PressureCompensationData.P3 = (double)pressureCompensationRaw.P3 / 524288.0;
+	context->PressureCompensationData.P4 = (double)pressureCompensationRaw.P4 * 65536.0;
+	context->PressureCompensationData.P5 = (double)pressureCompensationRaw.P5 * 2.0;
+	context->PressureCompensationData.P6 = (double)pressureCompensationRaw.P6 / 32768.0;
+	context->PressureCompensationData.P7 = (double)pressureCompensationRaw.P7;
+	context->PressureCompensationData.P8 = (double)pressureCompensationRaw.P8;
+	context->PressureCompensationData.P9 = (double)pressureCompensationRaw.P9 / 2147483648.0;
 }
 
 void L2HAL_BME280_I2C_ReadRegisters(L2HAL_BME280_I2C_ContextStruct* context, uint8_t baseAddress, uint8_t* buffer, uint8_t count)
@@ -115,14 +129,49 @@ L2HAL_BME280_I2C_RawMeasurementsStruct L2HAL_BME280_I2C_GetMeasurementRaw(L2HAL_
 	return result;
 }
 
-double L2HAL_BME280_I2C_GetTemperatureKelvin(L2HAL_BME280_I2C_ContextStruct* context, double rawTemperature)
+L2HAL_BME280_I2C_CreatureReadableMeasurementsStruct L2HAL_BME280_I2C_GetCreatureReadableValues
+(
+	L2HAL_BME280_I2C_ContextStruct* context,
+	L2HAL_BME280_I2C_RawMeasurementsStruct rawMeasurements
+)
 {
-	double var1 = (rawTemperature / 16384.0 - context->temperatureCompensationData.T1_DIV_1K) * context->temperatureCompensationData.T2;
+	L2HAL_BME280_I2C_CreatureReadableMeasurementsStruct result;
 
-	double var2 = (rawTemperature / 131072.0) - context->temperatureCompensationData.T1_DIV_8K;
+	/* Temperature */
+	double rawTemperatureDouble = (double)rawMeasurements.Temperature;
 
-	double var3 = var2 * var2 * context->temperatureCompensationData.T3;
+	double t_var1 = (rawTemperatureDouble / 16384.0 - context->TemperatureCompensationData.T1_DIV_1K) * context->TemperatureCompensationData.T2;
 
-	return (var1 + var3) / 5120.0 + L2HAL_BME280_I2C_ZERO_CELSIUS_IN_KELVINS;
+	double t_var2 = (rawTemperatureDouble / 131072.0) - context->TemperatureCompensationData.T1_DIV_8K;
+
+	double t_var3 = t_var2 * t_var2 * context->TemperatureCompensationData.T3;
+
+	double t_fine = t_var1 + t_var3;
+
+	result.Temperature = t_fine / 5120.0 + L2HAL_BME280_I2C_ZERO_CELSIUS_IN_KELVINS;
+
+	/* Humidity */
+	result.Humidity = rawMeasurements.Humidity;
+
+	/* Pressure */
+	double p_var1 = t_fine / 2.0 - 64000.0;
+	double p_var2 = p_var1 * p_var1 * context->PressureCompensationData.P6;
+	p_var2 = p_var2 + p_var1 * context->PressureCompensationData.P5;
+	p_var2 = (p_var2 / 4.0) + context->PressureCompensationData.P4;
+	p_var1 = (context->PressureCompensationData.P3 * p_var1 * p_var1 + context->PressureCompensationData.P2 * p_var1) / 524288.0;
+	p_var1 = (1.0 + p_var1 / 32768.0) * context->PressureCompensationData.P1;
+
+	if (p_var1 == 0.0)
+	{
+		result.Pressure = 0;
+	}
+
+	result.Pressure = 1048576.0 - (double)rawMeasurements.Pressure;
+	result.Pressure = (result.Pressure - (p_var2 / 4096.0)) * 6250.0 / p_var1;
+	p_var1 = context->PressureCompensationData.P9 * result.Pressure * result.Pressure;
+	p_var2 = result.Pressure * context->PressureCompensationData.P8 / 32768.0;
+	result.Pressure = result.Pressure + (p_var1 + p_var2 + context->PressureCompensationData.P7) / 16.0;
+
+	return result;
 }
 

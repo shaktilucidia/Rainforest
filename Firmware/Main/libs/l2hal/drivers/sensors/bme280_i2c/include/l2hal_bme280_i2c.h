@@ -59,6 +59,31 @@ typedef struct
 } L2HAL_BME280_I2C_TemperatureCompensationStruct;
 
 /**
+ * Pressure compensation data
+ */
+typedef struct
+{
+	double P1;
+
+	double P2;
+
+	double P3;
+
+	double P4;
+
+	double P5;
+
+	double P6;
+
+	double P7;
+
+	double P8;
+
+	double P9;
+
+} L2HAL_BME280_I2C_PressureCompensationStruct;
+
+/**
  * Sensor context
  */
 typedef struct
@@ -76,7 +101,12 @@ typedef struct
 	/**
 	 * Data for temperature compensation
 	 */
-	L2HAL_BME280_I2C_TemperatureCompensationStruct temperatureCompensationData;
+	L2HAL_BME280_I2C_TemperatureCompensationStruct TemperatureCompensationData;
+
+	/**
+	 * Data for pressure compensation
+	 */
+	L2HAL_BME280_I2C_PressureCompensationStruct PressureCompensationData;
 
 } L2HAL_BME280_I2C_ContextStruct;
 
@@ -101,6 +131,22 @@ typedef struct
 	uint32_t Pressure;
 
 } L2HAL_BME280_I2C_RawMeasurementsStruct;
+
+/**
+ * Creature-readable values
+ */
+typedef struct
+{
+	/**
+	 * Temperature in Kelvins
+	 */
+	double Temperature;
+
+	double Humidity;
+
+	double Pressure;
+}
+L2HAL_BME280_I2C_CreatureReadableMeasurementsStruct;
 
 /**
  * Initialize sensor (we support only forced mode for now)
@@ -134,9 +180,13 @@ bool L2HAL_BME280_I2C_IsMeasurementCompleted(L2HAL_BME280_I2C_ContextStruct* con
 L2HAL_BME280_I2C_RawMeasurementsStruct L2HAL_BME280_I2C_GetMeasurementRaw(L2HAL_BME280_I2C_ContextStruct* context);
 
 /**
- * Get human-readable temperature in Kelvins
+ * Get creature-readable values
  */
-double L2HAL_BME280_I2C_GetTemperatureKelvin(L2HAL_BME280_I2C_ContextStruct* context, double rawTemperature);
+L2HAL_BME280_I2C_CreatureReadableMeasurementsStruct L2HAL_BME280_I2C_GetCreatureReadableValues
+(
+	L2HAL_BME280_I2C_ContextStruct* context,
+	L2HAL_BME280_I2C_RawMeasurementsStruct rawMeasurements
+);
 
 
 #endif /* DRIVERS_SENSORS_BME280_I2C_INCLUDE_L2HAL_BME280_I2C_H_ */

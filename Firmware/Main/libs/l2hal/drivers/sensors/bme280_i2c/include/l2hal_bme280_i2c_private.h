@@ -24,6 +24,7 @@
  * Registers
  */
 #define L2HAL_BME280_I2C_REGISTER_BASE_TEMPERATURE_COMPENSATION 0x88
+#define L2HAL_BME280_I2C_REGISTER_BASE_PRESSURE_COMPENSATION 0x8E
 
 #define L2HAL_BME280_I2C_REGISTER_ID 0xD0
 #define L2HAL_BME280_I2C_REGISTER_RESET 0xE0
@@ -44,7 +45,7 @@
 #define L2HAL_BME280_I2C_RESET_COMMAND 0xB6
 
 /**
- * Temperature compensation data
+ * Temperature compensation data (raw)
  */
 typedef struct
 {
@@ -55,6 +56,31 @@ typedef struct
 	int16_t T3;
 
 } L2HAL_BME280_I2C_TemperatureCompensationRawStruct;
+
+/**
+ * Pressure compensation data (raw)
+ */
+typedef struct
+{
+	uint16_t P1;
+
+	int16_t P2;
+
+	int16_t P3;
+
+	int16_t P4;
+
+	int16_t P5;
+
+	int16_t P6;
+
+	int16_t P7;
+
+	int16_t P8;
+
+	int16_t P9;
+
+} L2HAL_BME280_I2C_PressureCompensationRawStruct;
 
 /**
  * Read data from count registers starting from baseAddress into buffer

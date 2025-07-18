@@ -214,9 +214,9 @@ int main(int argc, char* argv[])
 		L2HAL_BME280_I2C_StartForcedMeasurement
 		(
 			&LocalSensor,
-			L2HAL_BME280_I2C_OVERSAMPLING_1,
-			L2HAL_BME280_I2C_OVERSAMPLING_1,
-			L2HAL_BME280_I2C_OVERSAMPLING_1
+			L2HAL_BME280_I2C_OVERSAMPLING_16,
+			L2HAL_BME280_I2C_OVERSAMPLING_16,
+			L2HAL_BME280_I2C_OVERSAMPLING_16
 		);
 
 		while (!L2HAL_BME280_I2C_IsMeasurementCompleted(&LocalSensor)) {}
@@ -226,20 +226,21 @@ int main(int argc, char* argv[])
 		char buffer[32];
 		linePosition = 0;
 
-		/* Temperature */
-		double temperatureKelvin = L2HAL_BME280_I2C_GetTemperatureKelvin(&LocalSensor, (int32_t)rawMeasurements.Temperature);
+		/* Creature-readable values */
+		L2HAL_BME280_I2C_CreatureReadableMeasurementsStruct creatureReadableValues = L2HAL_BME280_I2C_GetCreatureReadableValues(&LocalSensor, rawMeasurements);
 
-		sprintf(buffer, "Temperature: %f", (float)(temperatureKelvin - L2HAL_BME280_I2C_ZERO_CELSIUS_IN_KELVINS));
+		/* Temperature */
+		sprintf(buffer, "Temperature: %f", (float)(creatureReadableValues.Temperature - L2HAL_BME280_I2C_ZERO_CELSIUS_IN_KELVINS));
 		FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, buffer);
 		linePosition += height;
 
 		/* Humidity */
-		sprintf(buffer, "Humidity: %d", rawMeasurements.Humidity);
+		sprintf(buffer, "Humidity: %f", creatureReadableValues.Humidity);
 		FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, buffer);
 		linePosition += height;
 
 		/* Pressure */
-		sprintf(buffer, "Pressure: %d", rawMeasurements.Pressure);
+		sprintf(buffer, "Pressure: %f", creatureReadableValues.Pressure * 0.00750062);
 		FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, buffer);
 		linePosition += height;
 
