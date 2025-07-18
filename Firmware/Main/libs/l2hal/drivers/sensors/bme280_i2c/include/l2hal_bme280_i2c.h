@@ -84,6 +84,25 @@ typedef struct
 } L2HAL_BME280_I2C_PressureCompensationStruct;
 
 /**
+ * Humidity compensation data
+ */
+typedef struct
+{
+	double H1;
+
+	double H2;
+
+	double H3;
+
+	double H4;
+
+	double H5;
+
+	double H6;
+
+} L2HAL_BME280_I2C_HumidityCompensationStruct;
+
+/**
  * Sensor context
  */
 typedef struct
@@ -102,6 +121,11 @@ typedef struct
 	 * Data for temperature compensation
 	 */
 	L2HAL_BME280_I2C_TemperatureCompensationStruct TemperatureCompensationData;
+
+	/**
+	 * Data for humidity compensation
+	 */
+	L2HAL_BME280_I2C_HumidityCompensationStruct HumidityCompensationData;
 
 	/**
 	 * Data for pressure compensation

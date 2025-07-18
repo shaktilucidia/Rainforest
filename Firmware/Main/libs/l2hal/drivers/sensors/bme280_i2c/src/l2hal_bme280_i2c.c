@@ -42,6 +42,18 @@ void L2HAL_BME280_I2C_Init(L2HAL_BME280_I2C_ContextStruct* context, I2C_HandleTy
 	context->TemperatureCompensationData.T2 = (double)temperatureCompensationRaw.T2;
 	context->TemperatureCompensationData.T3 = (double)temperatureCompensationRaw.T3;
 
+	/* Reading humidity compensation */
+	uint8_t humidityCompensationBytes[8];
+	L2HAL_BME280_I2C_ReadRegisters(context, 0xA1, (uint8_t*)&humidityCompensationBytes[0], 1);
+	L2HAL_BME280_I2C_ReadRegisters(context, 0xE1, (uint8_t*)&humidityCompensationBytes[1], 7);
+
+	context->HumidityCompensationData.H1 = (double)((uint8_t)humidityCompensationBytes[0]) / 524288.0;
+	context->HumidityCompensationData.H2 = (double)((int16_t)((humidityCompensationBytes[2] << 8) | humidityCompensationBytes[1])) / 65536.0;
+	context->HumidityCompensationData.H3 = (double)((uint8_t)(humidityCompensationBytes[3])) / 67108864.0;
+	context->HumidityCompensationData.H4 = (double)((int16_t)((humidityCompensationBytes[4] << 4) | (humidityCompensationBytes[5] & 0b1111))) * 64.0;
+	context->HumidityCompensationData.H5 = (double)((int16_t)(((humidityCompensationBytes[5] & 0b11110000) >> 4) | (humidityCompensationBytes[6] << 4))) / 16384.0;
+	context->HumidityCompensationData.H6 = (double)((int8_t)humidityCompensationBytes[7]) / 67108864.0;
+
 	/* Reading pressure compensation */
 	L2HAL_BME280_I2C_PressureCompensationRawStruct pressureCompensationRaw;
 	L2HAL_BME280_I2C_ReadRegisters(context, L2HAL_BME280_I2C_REGISTER_BASE_PRESSURE_COMPENSATION, (uint8_t*)&pressureCompensationRaw, sizeof(pressureCompensationRaw));
@@ -151,7 +163,21 @@ L2HAL_BME280_I2C_CreatureReadableMeasurementsStruct L2HAL_BME280_I2C_GetCreature
 	result.Temperature = t_fine / 5120.0 + L2HAL_BME280_I2C_ZERO_CELSIUS_IN_KELVINS;
 
 	/* Humidity */
-	result.Humidity = rawMeasurements.Humidity;
+	result.Humidity = t_fine - 76800.0;
+
+	result.Humidity = ((double)rawMeasurements.Humidity - (context->HumidityCompensationData.H4 + context->HumidityCompensationData.H5 * result.Humidity))
+			* (context->HumidityCompensationData.H2 * (1.0 + context->HumidityCompensationData.H6 * result.Humidity * (1.0 + context->HumidityCompensationData.H3 * result.Humidity)));
+
+	result.Humidity = result.Humidity * (1.0 - context->HumidityCompensationData.H1 * result.Humidity);
+
+	if (result.Humidity > 100.0)
+	{
+		result.Humidity = 100.0;
+	}
+	else if (result.Humidity < 0.0)
+	{
+		result.Humidity = 0.0;
+	}
 
 	/* Pressure */
 	double p_var1 = t_fine / 2.0 - 64000.0;
