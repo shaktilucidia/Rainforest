@@ -12,6 +12,7 @@
 #include "hal.h"
 #include "filesystem.h"
 #include "localization/localizator.h"
+#include "configuration/config_reader_writer.h"
 
 
 
