@@ -27,7 +27,7 @@ enum LOCALIZATION_PRESSURE_UNITS
 {
 	LOCALIZATION_PRESSURE_UNIT_MMHG = 0,
 	LOCALIZATION_PRESSURE_UNIT_HPA = 1,
-	LOCALIZATION_PRESSURE_UNIT_INHG = 3
+	LOCALIZATION_PRESSURE_UNIT_INHG = 2
 };
 
 /**
@@ -48,9 +48,9 @@ typedef struct
 } LocalizationContextrStruct;
 
 /**
- * Initialize localizator and provide default settings
+ * Initialize localizator and load settings from given file
  */
-LocalizationContextrStruct LocalizatorInit(void);
+LocalizationContextrStruct LocalizatorInit(char* path);
 
 /**
  * Set temperature unit

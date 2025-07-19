@@ -6,14 +6,48 @@
  */
 
 #include "../../include/localization/localizator.h"
-#include "../../libs/l2hal/include/l2hal_errors.h"
+#include "../../libs/l2hal/l2hal_config.h"
+#include "../../include/filesystem.h"
+#include "../../include/configuration/config_reader_writer.h"
+#include <stdio.h>
 
-LocalizationContextrStruct LocalizatorInit(void)
+LocalizationContextrStruct LocalizatorInit(char* path)
 {
 	LocalizationContextrStruct localization = { 0 };
 
-	localization.TemperatureUnit = LOCALIZATION_TEMPERATURE_UNIT_CELSIUS;
-	localization.PressureUnit = LOCALIZATION_PRESSURE_UNIT_MMHG;
+	uint32_t localizationConfigSize = FS_LoadFileToExternalRam
+	(
+		path,
+		200000,
+		&RamContext,
+		(void (*)(void*, uint32_t, uint32_t, uint8_t*))&L2HAL_LY68L6400_MemoryWrite
+	);
+
+	/* Temperature unit */
+	char* temperatureUnitRaw = ConfigGetValueByKey
+	(
+		"temperature_unit",
+		200000,
+		localizationConfigSize,
+		&RamContext,
+		(void (*)(void*, uint32_t, uint32_t, uint8_t*))&L2HAL_LY68L6400_MemoryRead
+	);
+
+	sscanf(temperatureUnitRaw, "%d", (int*)&localization.TemperatureUnit);
+	free(temperatureUnitRaw);
+
+	/* Pressure */
+	char* pressureUnitRaw = ConfigGetValueByKey
+	(
+		"pressure_unit",
+		200000,
+		localizationConfigSize,
+		&RamContext,
+		(void (*)(void*, uint32_t, uint32_t, uint8_t*))&L2HAL_LY68L6400_MemoryRead
+	);
+
+	sscanf(pressureUnitRaw, "%d", (int*)&localization.PressureUnit);
+	free(pressureUnitRaw);
 
 	return localization;
 }

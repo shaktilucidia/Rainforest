@@ -166,8 +166,7 @@ int main(int argc, char* argv[])
 	linePosition += height;
 	FMGL_API_PushFramebuffer(&FmglContext);
 
-	// TODO: Enable me
-	// HAL_HardwareSelfTest();
+	HAL_HardwareSelfTest();
 
 	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &font, 0, linePosition, &width, &height, false, "OK, mounting SD card...");
 	linePosition += height;
@@ -212,29 +211,7 @@ int main(int argc, char* argv[])
 	linePosition = 0;
 
 	/* Loading localization settings */
-	uint32_t localizationConfigSize = FS_LoadFileToExternalRam
-	(
-		"System/Configs/localization.config",
-		200000,
-		&RamContext,
-		(void (*)(void*, uint32_t, uint32_t, uint8_t*))&L2HAL_LY68L6400_MemoryWrite
-	);
-
-	uint8_t* value = ConfigGetValueByKey
-	(
-		"temperature_unit",
-		200000,
-		localizationConfigSize,
-		&RamContext,
-		(void (*)(void*, uint32_t, uint32_t, uint8_t*))&L2HAL_LY68L6400_MemoryRead
-	);
-
-	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, value);
-	linePosition += height;
-
-	LocalizationContext = LocalizatorInit();
-	LocalizatorSetTemperatureUnit(&LocalizationContext, LOCALIZATION_TEMPERATURE_UNIT_CELSIUS);
-	LocalizatorSetPressureUnit(&LocalizationContext, LOCALIZATION_PRESSURE_UNIT_MMHG);
+	LocalizationContext = LocalizatorInit("System/Configs/localization.config");
 
 	while(true)
 	{
