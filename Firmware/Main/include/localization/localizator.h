@@ -73,6 +73,11 @@ double LocalizatorGetLocalizedTemperature(LocalizationContextrStruct* context, d
 char* LocalizatorGetLocalizedTemperatureUnit(LocalizationContextrStruct* context);
 
 /**
+ * Get localized temperature precision template (like "%.1f")
+ */
+char* LocalizatorGetLocalizedTemperaturePrecisionTemplate(LocalizationContextrStruct* context);
+
+/**
  * Convert pressure from Pascals to local format
  */
 double LocalizatorGetLocalizedPressure(LocalizationContextrStruct* context, double p);
@@ -81,5 +86,10 @@ double LocalizatorGetLocalizedPressure(LocalizationContextrStruct* context, doub
  * Get localized pressure unit (like mmHg, hPa or inHg)
  */
 char* LocalizatorGetLocalizedPressureUnit(LocalizationContextrStruct* context);
+
+/**
+ * Get localized pressure precision template (like "%.1f", "%.0f", "%.4f%)
+ */
+char* LocalizatorGetLocalizedPressurePrecisionTemplate(LocalizationContextrStruct* context);
 
 #endif /* INCLUDE_LOCALIZATION_LOCALIZATOR_H_ */

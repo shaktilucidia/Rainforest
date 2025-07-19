@@ -67,6 +67,12 @@ char* LocalizatorGetLocalizedTemperatureUnit(LocalizationContextrStruct* context
 	}
 }
 
+char* LocalizatorGetLocalizedTemperaturePrecisionTemplate(LocalizationContextrStruct* context)
+{
+	/* For now we always return %.1f */
+	return "%.1f";
+}
+
 double LocalizatorGetLocalizedPressure(LocalizationContextrStruct* context, double p)
 {
 	switch (context->PressureUnit)
@@ -98,6 +104,25 @@ char* LocalizatorGetLocalizedPressureUnit(LocalizationContextrStruct* context)
 
 		case LOCALIZATION_PRESSURE_UNIT_INHG:
 			return "inHg";
+
+		default:
+			L2HAL_Error(Generic);
+			return NULL;
+	}
+}
+
+char* LocalizatorGetLocalizedPressurePrecisionTemplate(LocalizationContextrStruct* context)
+{
+	switch (context->PressureUnit)
+	{
+		case LOCALIZATION_PRESSURE_UNIT_MMHG:
+			return "%.1f";
+
+		case LOCALIZATION_PRESSURE_UNIT_HPA:
+			return "%.0f";
+
+		case LOCALIZATION_PRESSURE_UNIT_INHG:
+			return "%.2f";
 
 		default:
 			L2HAL_Error(Generic);

@@ -231,13 +231,15 @@ int main(int argc, char* argv[])
 		L2HAL_BME280_I2C_CreatureReadableMeasurementsStruct creatureReadableValues = L2HAL_BME280_I2C_GetCreatureReadableValues(&LocalSensor, rawMeasurements);
 
 		char buffer[32];
+		char template[32];
 		linePosition = 0;
 
 		/* Temperature */
+		sprintf(template, "Temperature: %s%%s", LocalizatorGetLocalizedTemperaturePrecisionTemplate(&LocalizationContext));
 		sprintf
 		(
 			buffer,
-			"Temperature: %.1f%s",
+			template,
 			LocalizatorGetLocalizedTemperature(&LocalizationContext, creatureReadableValues.Temperature),
 			LocalizatorGetLocalizedTemperatureUnit(&LocalizationContext)
 		);
@@ -251,10 +253,11 @@ int main(int argc, char* argv[])
 		linePosition += height;
 
 		/* Pressure */
+		sprintf(template, "Pressure: %s %%s", LocalizatorGetLocalizedPressurePrecisionTemplate(&LocalizationContext));
 		sprintf
 		(
 			buffer,
-			"Pressure: %.1f %s",
+			template,
 			LocalizatorGetLocalizedPressure(&LocalizationContext, creatureReadableValues.Pressure),
 			LocalizatorGetLocalizedPressureUnit(&LocalizationContext)
 		);
