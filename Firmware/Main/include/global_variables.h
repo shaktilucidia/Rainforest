@@ -10,6 +10,7 @@
 
 #include "../libs/l2hal/l2hal_config.h"
 #include "../libs/fatfs/ff.h"
+#include "localization/localizator.h"
 
 /* Put global variables (like contexts) here */
 
@@ -92,5 +93,10 @@ I2C_HandleTypeDef I2C1_Handle = { 0 };
  * Local sensor
  */
 L2HAL_BME280_I2C_ContextStruct LocalSensor;
+
+/**
+ * Localization context
+ */
+LocalizationContextrStruct LocalizationContext;
 
 #endif /* INCLUDE_GLOBAL_VARIABLES_H_ */

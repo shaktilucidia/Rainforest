@@ -166,8 +166,7 @@ int main(int argc, char* argv[])
 	linePosition += height;
 	FMGL_API_PushFramebuffer(&FmglContext);
 
-	//TODO: Enable me
-	//HAL_HardwareSelfTest();
+	HAL_HardwareSelfTest();
 
 	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &font, 0, linePosition, &width, &height, false, "OK, mounting SD card...");
 	linePosition += height;
@@ -209,6 +208,11 @@ int main(int argc, char* argv[])
 	/* Main font ready */
 	FMGL_API_ClearScreen(&FmglContext);
 
+	/* Loading localization settings */
+	LocalizationContext = LocalizatorInit();
+	LocalizatorSetTemperatureUnit(&LocalizationContext, LOCALIZATION_TEMPERATURE_UNIT_CELSIUS);
+	LocalizatorSetPressureUnit(&LocalizationContext, LOCALIZATION_PRESSURE_UNIT_MMHG);
+
 	while(true)
 	{
 		L2HAL_BME280_I2C_StartForcedMeasurement
@@ -223,27 +227,40 @@ int main(int argc, char* argv[])
 
 		L2HAL_BME280_I2C_RawMeasurementsStruct rawMeasurements = L2HAL_BME280_I2C_GetMeasurementRaw(&LocalSensor);
 
-		char buffer[32];
-		linePosition = 0;
-
 		/* Creature-readable values */
 		L2HAL_BME280_I2C_CreatureReadableMeasurementsStruct creatureReadableValues = L2HAL_BME280_I2C_GetCreatureReadableValues(&LocalSensor, rawMeasurements);
 
+		char buffer[32];
+		linePosition = 0;
+
 		/* Temperature */
-		sprintf(buffer, "Temperature: %f", (float)(creatureReadableValues.Temperature - L2HAL_BME280_I2C_ZERO_CELSIUS_IN_KELVINS));
+		sprintf
+		(
+			buffer,
+			"Temperature: %.1f%s",
+			LocalizatorGetLocalizedTemperature(&LocalizationContext, creatureReadableValues.Temperature),
+			LocalizatorGetLocalizedTemperatureUnit(&LocalizationContext)
+		);
+
 		FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, buffer);
 		linePosition += height;
 
 		/* Humidity */
-		sprintf(buffer, "Humidity: %f", creatureReadableValues.Humidity);
+		sprintf(buffer, "Humidity: %.1f%%", creatureReadableValues.Humidity);
 		FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, buffer);
 		linePosition += height;
 
 		/* Pressure */
-		sprintf(buffer, "Pressure: %f", creatureReadableValues.Pressure * 0.00750062);
+		sprintf
+		(
+			buffer,
+			"Pressure: %.1f %s",
+			LocalizatorGetLocalizedPressure(&LocalizationContext, creatureReadableValues.Pressure),
+			LocalizatorGetLocalizedPressureUnit(&LocalizationContext)
+		);
+
 		FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, buffer);
 		linePosition += height;
-
 
 		FMGL_API_PushFramebuffer(&FmglContext);
 	}
