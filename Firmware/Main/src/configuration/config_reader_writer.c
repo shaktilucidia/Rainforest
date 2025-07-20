@@ -177,3 +177,33 @@ int32_t ConfigGetIntValueByKey
 	return result;
 }
 
+double ConfigGetDoubleValueByKey
+(
+	ConfigContextStruct* context,
+	char* key,
+	bool* isFound
+)
+{
+	char* valueRaw = ConfigGetStringValueByKey
+	(
+		context,
+		key,
+		isFound
+	);
+
+	if (!*isFound)
+	{
+		free(valueRaw);
+		return 0;
+	}
+
+	double result = 0.0;
+	if (1 != sscanf(valueRaw, "%lf", (double*)&result))
+	{
+		*isFound = false;
+	}
+
+	free(valueRaw);
+	return result;
+}
+

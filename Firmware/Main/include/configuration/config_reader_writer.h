@@ -87,5 +87,13 @@ int32_t ConfigGetIntValueByKey
 	bool* isFound
 );
 
+/* Try to find double value in external memory located config */
+double ConfigGetDoubleValueByKey
+(
+	ConfigContextStruct* context,
+	char* key,
+	bool* isFound
+);
+
 
 #endif /* INCLUDE_CONFIGURATION_CONFIG_READER_WRITER_H_ */
