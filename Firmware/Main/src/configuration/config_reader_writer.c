@@ -11,6 +11,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 ConfigContextStruct ConfigLoad
 (
@@ -87,7 +88,7 @@ char* ConfigGetStringValueByKey
 				if (IsKeyValuePairByKey(currentLine, key))
 				{
 					char* result = malloc(currentLineLength - strlen(key));
-					ConfigGetValueFromPair(currentLine, key, buffer);
+					ConfigGetValueFromPair(currentLine, key, result);
 
 					free(currentLine);
 
@@ -112,7 +113,7 @@ char* ConfigGetStringValueByKey
 	if (IsKeyValuePairByKey(currentLine, key))
 	{
 		char* result = malloc(currentLineLength - strlen(key));
-		ConfigGetValueFromPair(currentLine, key, buffer);
+		ConfigGetValueFromPair(currentLine, key, result);
 
 		free(currentLine);
 
@@ -145,3 +146,34 @@ void ConfigGetValueFromPair(char* buffer, char* key, char* result)
 	strncpy(result, (char*)&buffer[keyLength + 1], bufferLength - keyLength - 1);
 	result[bufferLength - keyLength - 1] = 0x00;
 }
+
+int32_t ConfigGetIntValueByKey
+(
+	ConfigContextStruct* context,
+	char* key,
+	bool* isFound
+)
+{
+	char* valueRaw = ConfigGetStringValueByKey
+	(
+		context,
+		key,
+		isFound
+	);
+
+	if (!*isFound)
+	{
+		free(valueRaw);
+		return 0;
+	}
+
+	int32_t result = 0;
+	if (1 != sscanf(valueRaw, "%d", (int*)&result))
+	{
+		*isFound = false;
+	}
+
+	free(valueRaw);
+	return result;
+}
+

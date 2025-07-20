@@ -25,26 +25,30 @@ LocalizationContextrStruct LocalizatorInit(char* path)
 	bool isSuccess;
 
 	/* Temperature unit */
-	char* temperatureUnitRaw = ConfigGetStringValueByKey
+	localization.TemperatureUnit = ConfigGetIntValueByKey
 	(
 		&localization.LocalizationConfigContext,
 		"temperature_unit",
 		&isSuccess
 	);
 
-	sscanf(temperatureUnitRaw, "%d", (int*)&localization.TemperatureUnit);
-	free(temperatureUnitRaw);
+	if (!isSuccess)
+	{
+		L2HAL_Error(Generic);
+	}
 
 	/* Pressure */
-	char* pressureUnitRaw = ConfigGetStringValueByKey
+	localization.PressureUnit = ConfigGetIntValueByKey
 	(
 		&localization.LocalizationConfigContext,
 		"pressure_unit",
 		&isSuccess
 	);
 
-	sscanf(pressureUnitRaw, "%d", (int*)&localization.PressureUnit);
-	free(pressureUnitRaw);
+	if (!isSuccess)
+	{
+		L2HAL_Error(Generic);
+	}
 
 	return localization;
 }

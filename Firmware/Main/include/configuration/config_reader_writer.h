@@ -79,5 +79,13 @@ char* ConfigGetStringValueByKey
 	bool* isFound
 );
 
+/* Try to find integer value in external memory located config */
+int32_t ConfigGetIntValueByKey
+(
+	ConfigContextStruct* context,
+	char* key,
+	bool* isFound
+);
+
 
 #endif /* INCLUDE_CONFIGURATION_CONFIG_READER_WRITER_H_ */
