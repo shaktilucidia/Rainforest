@@ -11,6 +11,7 @@
 #include "../libs/l2hal/l2hal_config.h"
 #include "../libs/fatfs/ff.h"
 #include "localization/localizator.h"
+#include "../libs/l2hal/fmgl/console/include/console.h"
 
 /* Put global variables (like contexts) here */
 
@@ -80,6 +81,11 @@ FATFS* SDCardFsPtr = NULL;
 FMGL_LoadableFont_ContextStruct MainFontContext;
 
 /**
+ * Monospaced early-stage font
+ */
+FMGL_API_FontSettings EarlyFont;
+
+/**
  * Main font
  */
 FMGL_API_FontSettings MainFont;
@@ -98,5 +104,10 @@ L2HAL_BME280_I2C_ContextStruct LocalSensor;
  * Localization context
  */
 LocalizationContextrStruct LocalizationContext;
+
+/**
+ * Console
+ */
+FMGL_Console_ContextStruct Console;
 
 #endif /* INCLUDE_GLOBAL_VARIABLES_H_ */

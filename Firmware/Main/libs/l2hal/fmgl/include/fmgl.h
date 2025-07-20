@@ -57,7 +57,6 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
-//#include "include/l2hal.h"
 
 /*
  * Each font defines 256 characters (including null-character for 0x00).

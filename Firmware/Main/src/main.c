@@ -110,25 +110,6 @@ int main(int argc, char* argv[])
 		L2HAL_BME280_I2C_MAIN_ADDRESS
 	);
 
-	/* SD Card driver initialization */
-	enum L2HAL_SDCard_InitResult sdCardInitResult = L2HAL_SDCard_Init
-	(
-		&SDCardContext,
-		&SPI1Handle,
-
-		HAL_SDCARD_CS_PORT,
-		HAL_SDCARD_CS_PIN
-	);
-
-	if (NoCardInserted == sdCardInitResult)
-	{
-		L2HAL_Error(Generic); /* TODO: Show "Insert SD-card" message */
-	}
-	else if (Success != sdCardInitResult)
-	{
-		L2HAL_Error(Generic); /* Failed to initialize SD-card */
-	}
-
 	/* Attaching FMGL to display */
 	FmglContext = FMGL_API_AttachToDriver
 	(
@@ -144,32 +125,55 @@ int main(int argc, char* argv[])
 		(void (*)(void *, FMGL_API_ColorStruct))&L2HAL_SSD1683_ClearFramebuffer /* Blanking method */
 	);
 
-	FMGL_API_FontSettings font;
-	FMGL_API_Font fontData = FMGL_FontTerminusRegular12Init();
+	/* Early monospaced font */
+	FMGL_API_Font earlyFontData = FMGL_FontTerminusRegular12Init();
 	FMGL_API_XBMTransparencyMode transparencyMode = FMGL_XBMTransparencyModeNormal;
 
-	/* Font settings */
-	font.Font = &fontData;
-	font.Scale = 1;
-	font.CharactersSpacing = 0;
-	font.LinesSpacing = 0;
-	font.FontColor = &OnColor;
-	font.BackgroundColor = &OffColor;
-	font.Transparency = &transparencyMode;
+	EarlyFont.Font = &earlyFontData;
+	EarlyFont.Scale = 1;
+	EarlyFont.CharactersSpacing = 0;
+	EarlyFont.LinesSpacing = 0;
+	EarlyFont.FontColor = &OnColor;
+	EarlyFont.BackgroundColor = &OffColor;
+	EarlyFont.Transparency = &transparencyMode;
 
 	uint16_t linePosition = 0;
 	uint16_t width;
 	uint16_t height;
 
+	/* SD Card driver initialization */
+	enum L2HAL_SDCard_InitResult sdCardInitResult = L2HAL_SDCard_Init
+	(
+		&SDCardContext,
+		&SPI1Handle,
+
+		HAL_SDCARD_CS_PORT,
+		HAL_SDCARD_CS_PIN
+	);
+
+	if (NoCardInserted == sdCardInitResult)
+	{
+		/* SD Card is absent */
+		FMGL_API_RenderTextWithLineBreaks(&FmglContext, &EarlyFont, 0, linePosition, &width, &height, false, "Please insert SD Card (SDHC)");
+		linePosition += height;
+		FMGL_API_PushFramebuffer(&FmglContext);
+
+		L2HAL_Error(Generic);
+	}
+	else if (Success != sdCardInitResult)
+	{
+		L2HAL_Error(Generic); /* Failed to initialize SD-card */
+	}
+
 	/* Hardware self-test */
-	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &font, 0, linePosition, &width, &height, false, "Hardware self-test, it will take a while...");
+	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &EarlyFont, 0, linePosition, &width, &height, false, "Hardware self-test, it will take a while...");
 	linePosition += height;
 	FMGL_API_PushFramebuffer(&FmglContext);
 
 	// TODO: Uncomment me
-	// HAL_HardwareSelfTest();
+	//HAL_HardwareSelfTest();
 
-	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &font, 0, linePosition, &width, &height, false, "OK, mounting SD card...");
+	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &EarlyFont, 0, linePosition, &width, &height, false, "OK, mounting SD card...");
 	linePosition += height;
 	FMGL_API_PushFramebuffer(&FmglContext);
 
@@ -177,13 +181,13 @@ int main(int argc, char* argv[])
 	if (!FS_MountSDCard())
 	{
 		/* TODO: Offer to format SD-card*/
-		FMGL_API_RenderTextWithLineBreaks(&FmglContext, &font, 0, linePosition, &width, &height, false, "FAILED");
+		FMGL_API_RenderTextWithLineBreaks(&FmglContext, &EarlyFont, 0, linePosition, &width, &height, false, "FAILED");
 		linePosition += height;
 		FMGL_API_PushFramebuffer(&FmglContext);
 		L2HAL_Error(Generic);
 	}
 
-	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &font, 0, linePosition, &width, &height, false, "Done");
+	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &EarlyFont, 0, linePosition, &width, &height, false, "Done");
 	linePosition += height;
 	FMGL_API_PushFramebuffer(&FmglContext);
 
@@ -214,6 +218,10 @@ int main(int argc, char* argv[])
 	/* Loading localization settings */
 	LocalizationContext = LocalizatorInit("System/Configs/localization.config");
 
+	Console = FMGL_ConsoleInit(&FmglContext, &EarlyFont);
+
+
+	FMGL_API_FontSettings* tmpFont = &EarlyFont;
 	while(true)
 	{
 		L2HAL_BME280_I2C_StartForcedMeasurement
@@ -231,11 +239,23 @@ int main(int argc, char* argv[])
 		/* Creature-readable values */
 		L2HAL_BME280_I2C_CreatureReadableMeasurementsStruct creatureReadableValues = L2HAL_BME280_I2C_GetCreatureReadableValues(&LocalSensor, rawMeasurements);
 
-		char buffer[32];
+		char message[64];
+		sprintf
+		(
+			message,
+			"Temperature: %.1f \x9C" "C, Humidity: %.1f%%, Pressure: %.1f mmHg",
+			LocalizatorGetLocalizedTemperature(&LocalizationContext, creatureReadableValues.Temperature),
+			creatureReadableValues.Humidity,
+			LocalizatorGetLocalizedPressure(&LocalizationContext, creatureReadableValues.Pressure)
+		);
+
+		FMGL_ConsoleAddLine(&Console, message);
+
+/*		char buffer[32];
 		char template[32];
 		linePosition = 0;
 
-		/* Temperature */
+		 Temperature
 		sprintf(template, "Temperature: %s%%s", LocalizatorGetLocalizedTemperaturePrecisionTemplate(&LocalizationContext));
 		sprintf
 		(
@@ -248,12 +268,12 @@ int main(int argc, char* argv[])
 		FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, buffer);
 		linePosition += height;
 
-		/* Humidity */
+		 Humidity
 		sprintf(buffer, "Humidity: %.1f%%", creatureReadableValues.Humidity);
 		FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, buffer);
 		linePosition += height;
 
-		/* Pressure */
+		 Pressure
 		sprintf(template, "Pressure: %s %%s", LocalizatorGetLocalizedPressurePrecisionTemplate(&LocalizationContext));
 		sprintf
 		(
@@ -266,7 +286,7 @@ int main(int argc, char* argv[])
 		FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, buffer);
 		linePosition += height;
 
-		FMGL_API_PushFramebuffer(&FmglContext);
+		FMGL_API_PushFramebuffer(&FmglContext);*/
 	}
 }
 
