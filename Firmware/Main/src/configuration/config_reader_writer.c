@@ -7,22 +7,50 @@
 
 #include "../../include/configuration/config_reader_writer.h"
 #include "../../include/configuration/config_reader_writer_private.h"
+#include "../../include/filesystem.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
 
-/* Try to find value in external memory located config */
-char* ConfigGetValueByKey
+ConfigContextStruct ConfigLoad
 (
-	char* key,
+	char* path,
 	uint32_t baseAddress,
-	uint32_t configSize,
 	void* memoryDriverContext,
-	void (*memoryReadFunctionPtr)(void*, uint32_t, uint32_t, uint8_t*)
+	void (*memoryReadFunctionPtr)(void*, uint32_t, uint32_t, uint8_t*),
+	void (*memoryWriteFunctionPtr)(void*, uint32_t, uint32_t, uint8_t*)
 )
 {
-	uint32_t currentAddress = baseAddress;
-	uint32_t totalToRead = configSize;
+	ConfigContextStruct config;
+
+	strcpy(config.Path, path);
+	config.BaseAddress = baseAddress;
+	config.MemoryDriverContext = memoryDriverContext;
+	config.MemoryReadFunctionPtr = memoryReadFunctionPtr;
+	config.MemoryWriteFunctionPtr = memoryWriteFunctionPtr;
+
+	/* Actual load */
+	config.ConfigSize = FS_LoadFileToExternalRam
+	(
+		config.Path,
+		config.BaseAddress,
+		config.MemoryDriverContext,
+		config.MemoryWriteFunctionPtr
+	);
+
+	return config;
+}
+
+/* Try to find value in external memory located config */
+char* ConfigGetStringValueByKey
+(
+	ConfigContextStruct* context,
+	char* key,
+	bool* isFound
+)
+{
+	uint32_t currentAddress = context->BaseAddress;
+	uint32_t totalToRead = context->ConfigSize;
 
 	char buffer[CONFIG_READ_BLOCK_SIZE];
 
@@ -42,7 +70,7 @@ char* ConfigGetValueByKey
 			toRead = totalToRead;
 		}
 
-		memoryReadFunctionPtr(memoryDriverContext, currentAddress, toRead, (uint8_t*)buffer);
+		context->MemoryReadFunctionPtr(context->MemoryDriverContext, currentAddress, toRead, (uint8_t*)buffer);
 
 		totalToRead -= toRead;
 		currentAddress += toRead;
@@ -58,11 +86,13 @@ char* ConfigGetValueByKey
 
 				if (IsKeyValuePairByKey(currentLine, key))
 				{
-					char* buffer = malloc(currentLineLength - strlen(key));
+					char* result = malloc(currentLineLength - strlen(key));
 					ConfigGetValueFromPair(currentLine, key, buffer);
 
 					free(currentLine);
-					return buffer;
+
+					*isFound = true;
+					return result;
 				}
 
 				currentLineLength = 0;
@@ -81,13 +111,16 @@ char* ConfigGetValueByKey
 
 	if (IsKeyValuePairByKey(currentLine, key))
 	{
-		char* buffer = malloc(currentLineLength - strlen(key));
+		char* result = malloc(currentLineLength - strlen(key));
 		ConfigGetValueFromPair(currentLine, key, buffer);
 
 		free(currentLine);
-		return buffer;
+
+		*isFound = true;
+		return result;
 	}
 
+	*isFound = false;
 	return NULL;
 }
 

@@ -166,7 +166,8 @@ int main(int argc, char* argv[])
 	linePosition += height;
 	FMGL_API_PushFramebuffer(&FmglContext);
 
-	HAL_HardwareSelfTest();
+	// TODO: Uncomment me
+	// HAL_HardwareSelfTest();
 
 	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &font, 0, linePosition, &width, &height, false, "OK, mounting SD card...");
 	linePosition += height;

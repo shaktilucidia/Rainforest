@@ -9,6 +9,7 @@
 #define INCLUDE_LOCALIZATION_LOCALIZATOR_H_
 
 #include "../converters/units_converter.h"
+#include "../configuration/config_reader_writer.h"
 
 /**
  * Possible temperature units
@@ -35,6 +36,11 @@ enum LOCALIZATION_PRESSURE_UNITS
  */
 typedef struct
 {
+	/**
+	 * Localization config file context
+	 */
+	ConfigContextStruct LocalizationConfigContext;
+
 	/**
 	 * Use this temperature unit
 	 */
