@@ -13,6 +13,9 @@
 #include "filesystem.h"
 #include "localization/localizator.h"
 #include "configuration/config_reader_writer.h"
+#include "constants/generic.h"
+#include "constants/paths.h"
+#include "constants/addresses.h"
 
 
 

@@ -8,6 +8,7 @@
 #include "../../include/localization/localizator.h"
 #include "../../libs/l2hal/l2hal_config.h"
 #include <stdio.h>
+#include "../include/constants/addresses.h"
 
 LocalizationContextrStruct LocalizatorInit(char* path)
 {
@@ -16,7 +17,7 @@ LocalizationContextrStruct LocalizatorInit(char* path)
 	localization.LocalizationConfigContext = ConfigLoad
 	(
 		path,
-		200000,
+		CONSTANTS_ADDRESSES_LOCALIZATION_CONFIG_BASE_ADDRESS,
 		&RamContext,
 		(void (*)(void*, uint32_t, uint32_t, uint8_t*))&L2HAL_LY68L6400_MemoryRead,
 		(void (*)(void*, uint32_t, uint32_t, uint8_t*))&L2HAL_LY68L6400_MemoryWrite

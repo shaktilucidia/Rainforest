@@ -85,8 +85,8 @@ int main(int argc, char* argv[])
 
 		OffColor,
 
-		false, /* Do periodic full refresh? */
-		3 /* Do periodic full refresh each this frames count */
+		CONSTANTS_GENERIC_IS_DO_PERIODIC_FULL_REFRESH, /* Do periodic full refresh? */
+		CONSTANTS_GENERIC_PERIODIC_FULL_REFRESH_PERIOD /* Do periodic full refresh each this frames count */
 	);
 
 	/* Local sensor initialization */
@@ -172,15 +172,15 @@ int main(int argc, char* argv[])
 
 	/* Loading fonts */
 	FMGL_ConsoleAddLine(&Console, "Loading font:");
-	FMGL_ConsoleAddLine(&Console, "System/Fonts/FreeSans32.fmglfont");
+	FMGL_ConsoleAddLine(&Console, CONSTANTS_PATHS_MAIN_FONT);
 	FMGL_API_Font mainFontData = FMGL_LoadableFont_Init
 	(
 		&MainFontContext,
-		"System/Fonts/FreeSans32.fmglfont",
+		CONSTANTS_PATHS_MAIN_FONT,
 		&RamContext,
 		(void (*)(void*, uint32_t, uint32_t, uint8_t*))&L2HAL_LY68L6400_MemoryWrite,
 		(void (*)(void*, uint32_t, uint32_t, uint8_t*))&L2HAL_LY68L6400_MemoryRead,
-		100000
+		CONSTANTS_ADDRESSES_MAIN_FONT_BASE_ADDRESS
 	);
 
 	MainFont.Font = &mainFontData;
@@ -198,9 +198,9 @@ int main(int argc, char* argv[])
 
 	/* Loading localization settings */
 	FMGL_ConsoleAddLine(&Console, "Loading localization settings:");
-	FMGL_ConsoleAddLine(&Console, "System/Configs/localization.config");
+	FMGL_ConsoleAddLine(&Console, CONSTANTS_PATHS_LOCALIZATION_CONFIG);
 
-	LocalizationContext = LocalizatorInit("System/Configs/localization.config");
+	LocalizationContext = LocalizatorInit(CONSTANTS_PATHS_LOCALIZATION_CONFIG);
 
 	FMGL_ConsoleAddLine(&Console, "Success");
 
