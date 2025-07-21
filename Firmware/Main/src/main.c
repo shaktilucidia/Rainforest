@@ -35,19 +35,6 @@
 #include "main.h"
 #include "global_variables.h"
 
-// ----------------------------------------------------------------------------
-//
-// Standalone STM32F4 empty sample (trace via NONE).
-//
-// Trace support is enabled by adding the TRACE macro definition.
-// By default the trace messages are forwarded to the NONE output,
-// but can be rerouted to any device or completely suppressed, by
-// changing the definitions required in system/src/diag/trace-impl.c
-// (currently OS_USE_TRACE_ITM, OS_USE_TRACE_SEMIHOSTING_DEBUG/_STDOUT).
-//
-
-// ----- main() ---------------------------------------------------------------
-
 // Sample pragmas to cope with warnings. Please note the related line at
 // the end of this function, used to pop the compiler diagnostics status.
 #pragma GCC diagnostic push
@@ -137,11 +124,12 @@ int main(int argc, char* argv[])
 	EarlyFont.BackgroundColor = &OffColor;
 	EarlyFont.Transparency = &transparencyMode;
 
-	uint16_t linePosition = 0;
-	uint16_t width;
-	uint16_t height;
+	/* Console init */
+	Console = FMGL_ConsoleInit(&FmglContext, &EarlyFont);
 
 	/* SD Card driver initialization */
+	FMGL_ConsoleAddLine(&Console, "SD card initialization...");
+
 	enum L2HAL_SDCard_InitResult sdCardInitResult = L2HAL_SDCard_Init
 	(
 		&SDCardContext,
@@ -154,44 +142,37 @@ int main(int argc, char* argv[])
 	if (NoCardInserted == sdCardInitResult)
 	{
 		/* SD Card is absent */
-		FMGL_API_RenderTextWithLineBreaks(&FmglContext, &EarlyFont, 0, linePosition, &width, &height, false, "Please insert SD Card (SDHC)");
-		linePosition += height;
-		FMGL_API_PushFramebuffer(&FmglContext);
+		FMGL_ConsoleAddLine(&Console, "SD card is absent, please insert it and reboot");
 
 		L2HAL_Error(Generic);
 	}
 	else if (Success != sdCardInitResult)
 	{
+		FMGL_ConsoleAddLine(&Console, "Failed to initialize SD card");
+
 		L2HAL_Error(Generic); /* Failed to initialize SD-card */
 	}
 
 	/* Hardware self-test */
-	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &EarlyFont, 0, linePosition, &width, &height, false, "Hardware self-test, it will take a while...");
-	linePosition += height;
-	FMGL_API_PushFramebuffer(&FmglContext);
-
-	// TODO: Uncomment me
-	//HAL_HardwareSelfTest();
-
-	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &EarlyFont, 0, linePosition, &width, &height, false, "OK, mounting SD card...");
-	linePosition += height;
-	FMGL_API_PushFramebuffer(&FmglContext);
+	FMGL_ConsoleAddLine(&Console, "Hardware self-test, it will take a while...");
+	HAL_HardwareSelfTest();
+	FMGL_ConsoleAddLine(&Console, "Success");
 
 	/* Mounting SD card */
+	FMGL_ConsoleAddLine(&Console, "Mounting SD card...");
 	if (!FS_MountSDCard())
 	{
 		/* TODO: Offer to format SD-card*/
-		FMGL_API_RenderTextWithLineBreaks(&FmglContext, &EarlyFont, 0, linePosition, &width, &height, false, "FAILED");
-		linePosition += height;
-		FMGL_API_PushFramebuffer(&FmglContext);
+		FMGL_ConsoleAddLine(&Console, "FAILED");
+
 		L2HAL_Error(Generic);
 	}
 
-	FMGL_API_RenderTextWithLineBreaks(&FmglContext, &EarlyFont, 0, linePosition, &width, &height, false, "Done");
-	linePosition += height;
-	FMGL_API_PushFramebuffer(&FmglContext);
+	FMGL_ConsoleAddLine(&Console, "Success");
 
 	/* Loading fonts */
+	FMGL_ConsoleAddLine(&Console, "Loading font:");
+	FMGL_ConsoleAddLine(&Console, "System/Fonts/FreeSans32.fmglfont");
 	FMGL_API_Font mainFontData = FMGL_LoadableFont_Init
 	(
 		&MainFontContext,
@@ -210,18 +191,23 @@ int main(int argc, char* argv[])
 	MainFont.BackgroundColor = &OffColor;
 	MainFont.Transparency = &transparencyMode;
 
+	FMGL_ConsoleAddLine(&Console, "Success");
+
 	/* Main font ready */
 	FMGL_API_ClearScreen(&FmglContext);
 
-	linePosition = 0;
-
 	/* Loading localization settings */
+	FMGL_ConsoleAddLine(&Console, "Loading localization settings:");
+	FMGL_ConsoleAddLine(&Console, "System/Configs/localization.config");
+
 	LocalizationContext = LocalizatorInit("System/Configs/localization.config");
 
-	Console = FMGL_ConsoleInit(&FmglContext, &EarlyFont);
+	FMGL_ConsoleAddLine(&Console, "Success");
 
+	/* Main loop enter */
+	FMGL_API_ClearScreen(&FmglContext);
+	FMGL_API_PushFramebuffer(&FmglContext);
 
-	FMGL_API_FontSettings* tmpFont = &EarlyFont;
 	while(true)
 	{
 		L2HAL_BME280_I2C_StartForcedMeasurement
@@ -239,23 +225,15 @@ int main(int argc, char* argv[])
 		/* Creature-readable values */
 		L2HAL_BME280_I2C_CreatureReadableMeasurementsStruct creatureReadableValues = L2HAL_BME280_I2C_GetCreatureReadableValues(&LocalSensor, rawMeasurements);
 
-		char message[64];
-		sprintf
-		(
-			message,
-			"Temperature: %.1f \x9C" "C, Humidity: %.1f%%, Pressure: %.1f mmHg",
-			LocalizatorGetLocalizedTemperature(&LocalizationContext, creatureReadableValues.Temperature),
-			creatureReadableValues.Humidity,
-			LocalizatorGetLocalizedPressure(&LocalizationContext, creatureReadableValues.Pressure)
-		);
-
-		FMGL_ConsoleAddLine(&Console, message);
-
-/*		char buffer[32];
+		char buffer[32];
 		char template[32];
-		linePosition = 0;
+		uint16_t linePosition = 0;
+		uint16_t width;
+		uint16_t height;
 
-		 Temperature
+		FMGL_API_ClearScreen(&FmglContext);
+
+		/* Temperature */
 		sprintf(template, "Temperature: %s%%s", LocalizatorGetLocalizedTemperaturePrecisionTemplate(&LocalizationContext));
 		sprintf
 		(
@@ -268,12 +246,12 @@ int main(int argc, char* argv[])
 		FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, buffer);
 		linePosition += height;
 
-		 Humidity
+		/* Humidity */
 		sprintf(buffer, "Humidity: %.1f%%", creatureReadableValues.Humidity);
 		FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, buffer);
 		linePosition += height;
 
-		 Pressure
+		/* Pressure */
 		sprintf(template, "Pressure: %s %%s", LocalizatorGetLocalizedPressurePrecisionTemplate(&LocalizationContext));
 		sprintf
 		(
@@ -286,7 +264,7 @@ int main(int argc, char* argv[])
 		FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, buffer);
 		linePosition += height;
 
-		FMGL_API_PushFramebuffer(&FmglContext);*/
+		FMGL_API_PushFramebuffer(&FmglContext);
 	}
 }
 
