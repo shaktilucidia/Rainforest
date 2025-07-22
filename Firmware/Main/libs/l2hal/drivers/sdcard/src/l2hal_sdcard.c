@@ -472,5 +472,5 @@ void L2HAL_SDCard_WriteSingleBlock(L2HAL_SDCard_ContextStruct* context, uint32_t
 
 	L2HAL_SDCard_WaitForBusyCleared(context);
 
-	L2HAL_SDCard_Select(context, true);
+	L2HAL_SDCard_Select(context, false);
 }

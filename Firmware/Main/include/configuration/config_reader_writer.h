@@ -71,7 +71,9 @@ ConfigContextStruct ConfigLoad
 );
 
 
-/* Try to find string value in external memory located config */
+/**
+ * Try to find string value in external memory located config
+ */
 char* ConfigGetStringValueByKey
 (
 	ConfigContextStruct* context,
@@ -79,7 +81,9 @@ char* ConfigGetStringValueByKey
 	bool* isFound
 );
 
-/* Try to find integer value in external memory located config */
+/**
+ * Try to find integer value in external memory located config
+ */
 int32_t ConfigGetIntValueByKey
 (
 	ConfigContextStruct* context,
@@ -87,12 +91,44 @@ int32_t ConfigGetIntValueByKey
 	bool* isFound
 );
 
-/* Try to find double value in external memory located config */
+/**
+ * Try to find double value in external memory located config
+ */
 double ConfigGetDoubleValueByKey
 (
 	ConfigContextStruct* context,
 	char* key,
 	bool* isFound
+);
+
+/**
+ * Set string value by key
+ */
+void ConfigSetStringValueByKey
+(
+	ConfigContextStruct* context,
+	char* key,
+	char* value
+);
+
+/**
+ * Set integer value by key
+ */
+void ConfigSetIntValueByKey
+(
+	ConfigContextStruct* context,
+	char* key,
+	int32_t value
+);
+
+/**
+ * Set Double value by key
+ */
+void ConfigSetDoubleValueByKey
+(
+	ConfigContextStruct* context,
+	char* key,
+	double value
 );
 
 

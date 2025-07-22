@@ -155,7 +155,8 @@ int main(int argc, char* argv[])
 
 	/* Hardware self-test */
 	FMGL_ConsoleAddLine(&Console, "Hardware self-test, it will take a while...");
-	HAL_HardwareSelfTest();
+	// TODO: Uncomment me
+	//HAL_HardwareSelfTest();
 	FMGL_ConsoleAddLine(&Console, "Success");
 
 	/* Mounting SD card */

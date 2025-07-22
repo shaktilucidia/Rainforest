@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include "../libs/l2hal/include/l2hal_errors.h"
 
 ConfigContextStruct ConfigLoad
 (
@@ -42,7 +43,6 @@ ConfigContextStruct ConfigLoad
 	return config;
 }
 
-/* Try to find value in external memory located config */
 char* ConfigGetStringValueByKey
 (
 	ConfigContextStruct* context,
@@ -96,6 +96,9 @@ char* ConfigGetStringValueByKey
 					return result;
 				}
 
+				free(currentLine);
+				currentLine = malloc(1);
+
 				currentLineLength = 0;
 			}
 			else
@@ -120,6 +123,8 @@ char* ConfigGetStringValueByKey
 		*isFound = true;
 		return result;
 	}
+
+	free(currentLine);
 
 	*isFound = false;
 	return NULL;
@@ -207,3 +212,177 @@ double ConfigGetDoubleValueByKey
 	return result;
 }
 
+void ConfigSetStringValueByKey
+(
+	ConfigContextStruct* context,
+	char* key,
+	char* value
+)
+{
+	char tmpFilePath[256];
+	sprintf(tmpFilePath, "%s_tmp", context->Path);
+
+	FIL tmpFile;
+	FRESULT fResult = f_open(&tmpFile, tmpFilePath, FA_CREATE_ALWAYS | FA_WRITE);
+	if (fResult != FR_OK)
+	{
+		L2HAL_Error(Generic);
+	}
+
+	uint32_t currentAddress = context->BaseAddress;
+	uint32_t totalToRead = context->ConfigSize;
+
+	char buffer[CONFIG_READ_BLOCK_SIZE];
+
+	char* currentLine = malloc(1);
+	uint32_t currentLineLength = 0;
+	uint32_t bufferPosition;
+
+	bool isKeyFound = false;
+
+	uint32_t toRead = 0;
+	while (totalToRead > 0)
+	{
+		if (totalToRead > CONFIG_READ_BLOCK_SIZE)
+		{
+			toRead = CONFIG_READ_BLOCK_SIZE;
+		}
+		else
+		{
+			toRead = totalToRead;
+		}
+
+		context->MemoryReadFunctionPtr(context->MemoryDriverContext, currentAddress, toRead, (uint8_t*)buffer);
+
+
+		totalToRead -= toRead;
+		currentAddress += toRead;
+
+		bufferPosition = 0;
+
+		while (bufferPosition < toRead)
+		{
+			if ('\n' == buffer[bufferPosition])
+			{
+				/* Endline */
+				currentLine[currentLineLength] = 0x00;
+
+				if (ConfigProcessFileLineOnWrite(&tmpFile, currentLine, key, value))
+				{
+					isKeyFound = true;
+				}
+
+				free(currentLine);
+				currentLine = malloc(1);
+
+				currentLineLength = 0;
+			}
+			else
+			{
+				currentLine = ConfigAddByteToArray(currentLine, currentLineLength, buffer[bufferPosition]);
+				currentLineLength ++;
+			}
+
+			bufferPosition ++;
+		}
+	}
+
+	currentLine[currentLineLength] = 0x00;
+
+	if (0 != currentLineLength)
+	{
+		/* If last line is not empty */
+		if (ConfigProcessFileLineOnWrite(&tmpFile, currentLine, key, value))
+		{
+			isKeyFound = true;
+		}
+	}
+
+	free(currentLine);
+
+	/* Key not found, adding */
+	ConfigWriteKeyValuePair(&tmpFile, key, value);
+
+	fResult = f_close(&tmpFile);
+	if (fResult != FR_OK)
+	{
+		L2HAL_Error(Generic);
+	}
+
+	/* Replacing file */
+	fResult = f_unlink(context->Path);
+	if (fResult != FR_OK)
+	{
+		L2HAL_Error(Generic);
+	}
+
+	fResult = f_rename(tmpFilePath, context->Path);
+	if (fResult != FR_OK)
+	{
+		L2HAL_Error(Generic);
+	}
+
+	/* Reload in memory */
+	context->ConfigSize = FS_LoadFileToExternalRam
+	(
+		context->Path,
+		context->BaseAddress,
+		context->MemoryDriverContext,
+		context->MemoryWriteFunctionPtr
+	);
+}
+
+bool ConfigProcessFileLineOnWrite(FIL* fileToWrite, char* line, char* key, char* newValue)
+{
+	bool result;
+
+	if (IsKeyValuePairByKey(line, key))
+	{
+		ConfigWriteKeyValuePair(fileToWrite, key, newValue);
+
+		result = true;
+	}
+	else
+	{
+		f_puts(line, fileToWrite);
+
+		result = false;
+	}
+
+	f_puts("\n", fileToWrite);
+
+	return result;
+}
+
+void ConfigWriteKeyValuePair(FIL* fileToWrite, char* key, char* value)
+{
+	f_puts(key, fileToWrite);
+	f_puts("=", fileToWrite);
+	f_puts(value, fileToWrite);
+}
+
+void ConfigSetIntValueByKey
+(
+	ConfigContextStruct* context,
+	char* key,
+	int32_t value
+)
+{
+	char buffer[32];
+	sprintf(buffer, "%d", value);
+
+	ConfigSetStringValueByKey(context, key, buffer);
+}
+
+void ConfigSetDoubleValueByKey
+(
+	ConfigContextStruct* context,
+	char* key,
+	double value
+)
+{
+	char buffer[32];
+	sprintf(buffer, "%lf", value);
+
+	ConfigSetStringValueByKey(context, key, buffer);
+}

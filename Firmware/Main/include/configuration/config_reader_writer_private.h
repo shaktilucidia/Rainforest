@@ -9,6 +9,7 @@
 #define INCLUDE_CONFIGURATION_CONFIG_READER_WRITER_PRIVATE_H_
 
 #include <stdbool.h>
+#include "../../include/filesystem.h"
 
 /**
  * Add new byte to buffer, reallocating it and returning new address
@@ -24,6 +25,17 @@ bool IsKeyValuePairByKey(char* buffer, char* key);
  * Result value if buffer contains key=value pair, otherwise \0
  */
 void ConfigGetValueFromPair(char* buffer, char* key, char* result);
+
+/**
+ * Copy line to file if key not found in line, or write key=newValue pair to file if found
+ * Returns true if key found
+ */
+bool ConfigProcessFileLineOnWrite(FIL* fileToWrite, char* line, char* key, char* newValue);
+
+/**
+ * Write key=value pair to file (no newline!)
+ */
+void ConfigWriteKeyValuePair(FIL* fileToWrite, char* key, char* value);
 
 
 
