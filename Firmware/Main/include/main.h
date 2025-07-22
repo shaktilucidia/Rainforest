@@ -17,6 +17,11 @@
 #include "constants/paths.h"
 #include "constants/addresses.h"
 
+/**
+ * Called every SysTick, executed in interrupt context
+ */
+void OnSysTick(void);
+
 
 
 #endif /* INCLUDE_MAIN_H_ */

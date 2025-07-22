@@ -205,6 +205,9 @@ int main(int argc, char* argv[])
 
 	FMGL_ConsoleAddLine(&Console, "Success");
 
+	/* Setup SysTick handlers */
+	L2HAL_SysTick_RegisterHandler(&OnSysTick);
+
 	/* Main loop enter */
 	FMGL_API_ClearScreen(&FmglContext);
 	FMGL_API_PushFramebuffer(&FmglContext);
@@ -268,6 +271,15 @@ int main(int argc, char* argv[])
 		FMGL_API_PushFramebuffer(&FmglContext);
 	}
 }
+
+/**
+ * Called every SysTick, executed in interrupt context
+ */
+void OnSysTick(void)
+{
+
+}
+
 
 #pragma GCC diagnostic pop
 

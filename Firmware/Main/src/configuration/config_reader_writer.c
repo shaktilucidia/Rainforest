@@ -301,7 +301,10 @@ void ConfigSetStringValueByKey
 	free(currentLine);
 
 	/* Key not found, adding */
-	ConfigWriteKeyValuePair(&tmpFile, key, value);
+	if (!isKeyFound)
+	{
+		ConfigWriteKeyValuePair(&tmpFile, key, value);
+	}
 
 	fResult = f_close(&tmpFile);
 	if (fResult != FR_OK)

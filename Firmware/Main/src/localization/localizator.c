@@ -9,6 +9,7 @@
 #include "../../libs/l2hal/l2hal_config.h"
 #include <stdio.h>
 #include "../include/constants/addresses.h"
+#include "../include/constants/localization.h"
 
 LocalizationContextrStruct LocalizatorInit(char* path)
 {
@@ -29,7 +30,7 @@ LocalizationContextrStruct LocalizatorInit(char* path)
 	localization.TemperatureUnit = ConfigGetIntValueByKey
 	(
 		&localization.LocalizationConfigContext,
-		"temperature_unit",
+		CONSTATNS_LOCALIZATION_TEMPERATURE_UNIT_CONFIG_KEY,
 		&isSuccess
 	);
 
@@ -42,7 +43,7 @@ LocalizationContextrStruct LocalizatorInit(char* path)
 	localization.PressureUnit = ConfigGetIntValueByKey
 	(
 		&localization.LocalizationConfigContext,
-		"pressure_unit",
+		CONSTATNS_LOCALIZATION_PRESSURE_UNIT_CONFIG_KEY,
 		&isSuccess
 	);
 
@@ -57,12 +58,16 @@ LocalizationContextrStruct LocalizatorInit(char* path)
 void LocalizatorSetTemperatureUnit(LocalizationContextrStruct* context, enum LOCALIZATION_TEMPERATURE_UNITS unit)
 {
 	context->TemperatureUnit = unit;
+
+	ConfigSetIntValueByKey(&context->LocalizationConfigContext, CONSTATNS_LOCALIZATION_TEMPERATURE_UNIT_CONFIG_KEY, unit);
 }
 
 
 void LocalizatorSetPressureUnit(LocalizationContextrStruct* context, enum LOCALIZATION_PRESSURE_UNITS unit)
 {
 	context->PressureUnit = unit;
+
+	ConfigSetIntValueByKey(&context->LocalizationConfigContext, CONSTATNS_LOCALIZATION_PRESSURE_UNIT_CONFIG_KEY, unit);
 }
 
 double LocalizatorGetLocalizedTemperature(LocalizationContextrStruct* context, double t)
