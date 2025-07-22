@@ -43,6 +43,7 @@
 #include "drivers/sdcard/include/l2hal_sdcard.h"
 #include "fmgl/fonts/loadable/include/loadable_font.h"
 #include "drivers/sensors/bme280_i2c/include/l2hal_bme280_i2c.h"
+#include "drivers/bluetooth/hc06/include/l2hal_hc06.h"
 
 
 

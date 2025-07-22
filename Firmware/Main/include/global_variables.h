@@ -110,4 +110,14 @@ LocalizationContextrStruct LocalizationContext;
  */
 FMGL_Console_ContextStruct Console;
 
+/**
+ * UART1 Handle
+ */
+UART_HandleTypeDef UART1Handle;
+
+/**
+ * Bluetooth (HC-06) context
+ */
+L2HAL_HC06_ContextStruct BluetoothContext;
+
 #endif /* INCLUDE_GLOBAL_VARIABLES_H_ */

@@ -10,27 +10,32 @@
 
 #include "../libs/l2hal/l2hal_config.h"
 
+extern UART_HandleTypeDef UART1Handle;
+
 /* Interrupts handlers */
 
 /**
  * SysTick interrupt handler.
  */
-volatile void SysTick_Handler(void);
+void SysTick_Handler(void);
 
 /* SPI1 DMA TX complete */
-volatile void DMA2_Stream3_IRQHandler(void);
+void DMA2_Stream3_IRQHandler(void);
 
 /* SPI1 DMA RX complete */
-volatile void DMA2_Stream2_IRQHandler(void);
+void DMA2_Stream2_IRQHandler(void);
 
 /* SPI2 DMA TX complete */
-volatile void DMA1_Stream4_IRQHandler(void);
+void DMA1_Stream4_IRQHandler(void);
 
 /* SPI2 DMA RX complete */
-volatile void DMA1_Stream3_IRQHandler(void);
+void DMA1_Stream3_IRQHandler(void);
 
 /* I2C1 */
 void I2C1_EV_IRQHandler(void);
 void I2C1_ER_IRQHandler(void);
+
+/* UART1 */
+void USART1_IRQHandler(void);
 
 #endif /* INCLUDE_INTERRUPTS_H_ */

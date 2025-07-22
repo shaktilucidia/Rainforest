@@ -68,6 +68,31 @@ L2HAL_HC06_ContextStruct L2HAL_HC06_AttachToDevice(UART_HandleTypeDef* uart)
 	return context;
 }
 
+void L2HAL_HC06_SetBaudrate(L2HAL_HC06_ContextStruct* context, enum L2HAL_HC06_BAUDRARTE_MODE baudrate)
+{
+	char buffer[16];
+	snprintf(buffer, 16, "AT+BAUD%d", baudrate);
+
+	uint8_t sendLength = (uint8_t)strlen(buffer);
+	if (HAL_UART_Transmit(context->UART_Handle, (uint8_t*)buffer, sendLength , L2HAL_HC06_UART_TIMEOUT) != HAL_OK)
+	{
+		L2HAL_Error(Generic);
+	}
+
+	/* Immediately expecting an answer */
+	if (HAL_UART_Receive(context->UART_Handle, (uint8_t*)buffer, 2, L2HAL_HC06_UART_TIMEOUT) != HAL_OK)
+	{
+		L2HAL_Error(Generic);
+	}
+
+	buffer[2] = 0x00; /* Null-terminating by paws */
+
+	if (strcmp("OK", buffer) != 0)
+	{
+		L2HAL_Error(Generic);
+	}
+}
+
 void L2HAL_HC06_SetName(L2HAL_HC06_ContextStruct* context, const char* name)
 {
 

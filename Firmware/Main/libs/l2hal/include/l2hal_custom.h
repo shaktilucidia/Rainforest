@@ -36,6 +36,13 @@
 #include "../drivers/display/ssd1683/include/ssd1683.h"
 #include "../drivers/sdcard/include/l2hal_sdcard.h"
 
+/**
+ * UART1 interrupt priorities
+ */
+#define USART1_IRQN_PRIORITY 1
+#define USART1_IRQN_SUBPRIORITY 0
+
+
 extern SPI_HandleTypeDef SPI1Handle;
 extern DMA_HandleTypeDef SPI1TxDmaHandle;
 extern DMA_HandleTypeDef SPI1RxDmaHandle;
@@ -61,8 +68,6 @@ void L2HAL_InitCustomHardware(void);
  * SPI-related stuff
  */
 void L2HAL_SetupSPI(void);
-void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi);
-void HAL_SPI_MspDeInit(SPI_HandleTypeDef *hspi);
 
 void L2HAL_PSRAMDmaCompleted(DMA_HandleTypeDef *hdma); /* Called when transmission via PSRAM SPI is completed */
 

@@ -56,6 +56,18 @@
  */
 #define L2HAL_HC06_PIN_CODE_LENGTH 5
 
+enum L2HAL_HC06_BAUDRARTE_MODE
+{
+	L2HAL_HC06_BAUDRARTE_MODE_1200 = 1,
+	L2HAL_HC06_BAUDRARTE_MODE_2400 = 2,
+	L2HAL_HC06_BAUDRARTE_MODE_4800 = 3,
+	L2HAL_HC06_BAUDRARTE_MODE_9600 = 4,
+	L2HAL_HC06_BAUDRARTE_MODE_19200 = 5,
+	L2HAL_HC06_BAUDRARTE_MODE_38400 = 6,
+	L2HAL_HC06_BAUDRARTE_MODE_57600 = 7,
+	L2HAL_HC06_BAUDRARTE_MODE_115200 = 8
+};
+
 /**
  * Driver context struct
  */
@@ -78,6 +90,11 @@ L2HAL_HC06_ContextStruct;
  * Tries to attach to HC-06, connected to given UART. Issues "AT" command to test if device present or not
  */
 L2HAL_HC06_ContextStruct L2HAL_HC06_AttachToDevice(UART_HandleTypeDef* uart);
+
+/**
+ * Set baudrate
+ */
+void L2HAL_HC06_SetBaudrate(L2HAL_HC06_ContextStruct* context, enum L2HAL_HC06_BAUDRARTE_MODE baudrate);
 
 /**
  * Set bluetooth name. Spaces are replaced with underscores

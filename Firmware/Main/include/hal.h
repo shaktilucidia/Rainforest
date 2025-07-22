@@ -64,7 +64,20 @@
 #define HAL_DISPLAY_CS_PIN GPIO_PIN_3
 
 
+/**
+ * Bluetooth full speed
+ */
+#define HAL_BLUETOOTH_FULL_SPEED_BAUDRATE 115200
+
+/**
+ * Bluetooth factory speed
+ */
+#define HAL_BLUETOOTH_FACTORY_SPEED_BAUDRATE 9600
+
+
 extern L2HAL_LY68L6400_ContextStruct RamContext;
+extern UART_HandleTypeDef UART1Handle;
+extern L2HAL_HC06_ContextStruct BluetoothContext;
 
 /**
  * Init project-specific hardware here
@@ -81,5 +94,25 @@ void HAL_HardwareSelfTest(void);
  * Test attached PSRAM
  */
 void HAL_PSRAMSelfTest(void);
+
+/**
+ * Initialize UART1 at given speed
+ */
+void HAL_UART1_Init(uint32_t baudrate);
+
+/**
+ * Deinitialize UART1
+ */
+void HAL_UART1_DeInit(void);
+
+/**
+ * Set bluetooth module baudrate, name and pin
+ */
+void HAL_Bluetooth_FactorySetup
+(
+	enum L2HAL_HC06_BAUDRARTE_MODE baudrate,
+	const char* name,
+	const char* pin
+);
 
 #endif /* INCLUDE_HAL_H_ */

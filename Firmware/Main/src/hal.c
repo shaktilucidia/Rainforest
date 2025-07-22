@@ -140,3 +140,63 @@ void HAL_PSRAMSelfTest(void)
 
 	HAL_SetInfoLedState(false);
 }
+
+
+void HAL_UART1_Init(uint32_t baudrate)
+{
+	/* UART1 (for bluetooth) */
+	UART1Handle.Instance = USART1;
+	UART1Handle.Init.BaudRate = baudrate;
+	UART1Handle.Init.WordLength = UART_WORDLENGTH_8B;
+	UART1Handle.Init.StopBits = UART_STOPBITS_1;
+	UART1Handle.Init.Parity = UART_PARITY_NONE;
+	UART1Handle.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+	UART1Handle.Init.Mode = UART_MODE_TX_RX;
+
+	if(HAL_OK != HAL_UART_DeInit(&UART1Handle))
+	{
+		L2HAL_Error(Generic);
+	}
+
+	if(HAL_OK != HAL_UART_Init(&UART1Handle))
+	{
+		L2HAL_Error(Generic);
+	}
+}
+
+void HAL_UART1_DeInit(void)
+{
+	UART1Handle.Instance = USART1;
+
+	if(HAL_OK != HAL_UART_DeInit(&UART1Handle))
+	{
+		L2HAL_Error(Generic);
+	}
+}
+
+void HAL_Bluetooth_FactorySetup
+(
+	enum L2HAL_HC06_BAUDRARTE_MODE baudrate,
+	const char* name,
+	const char* pin
+)
+{
+	HAL_UART1_DeInit();
+
+	HAL_UART1_Init(HAL_BLUETOOTH_FACTORY_SPEED_BAUDRATE);
+
+	BluetoothContext = L2HAL_HC06_AttachToDevice(&UART1Handle);
+	if (!BluetoothContext.IsFound)
+	{
+		/* Bluetooth really failed */
+		L2HAL_Error(Generic);
+	}
+
+	/* Initial setup */
+	L2HAL_HC06_SetName(&BluetoothContext, "Rainforest");
+	L2HAL_HC06_SetPIN(&BluetoothContext, "1234");
+
+	L2HAL_HC06_SetBaudrate(&BluetoothContext, L2HAL_HC06_BAUDRARTE_MODE_115200);
+
+	HAL_Delay(1000);
+}

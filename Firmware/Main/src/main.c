@@ -171,6 +171,38 @@ int main(int argc, char* argv[])
 
 	FMGL_ConsoleAddLine(&Console, "Success");
 
+	/* Enabling bluetooth */
+	FMGL_ConsoleAddLine(&Console, "Setting-up Bluetooth...");
+
+	/* Fullspeed connection attempt */
+	HAL_UART1_Init(HAL_BLUETOOTH_FULL_SPEED_BAUDRATE);
+
+	BluetoothContext = L2HAL_HC06_AttachToDevice(&UART1Handle);
+	if (!BluetoothContext.IsFound)
+	{
+		FMGL_ConsoleAddLine(&Console, "Normal mode failed, trying first power on setup...");
+		FMGL_ConsoleAddLine(&Console, "Name: Rainforest");
+		FMGL_ConsoleAddLine(&Console, "Pin: 1234");
+
+		HAL_Bluetooth_FactorySetup(L2HAL_HC06_BAUDRARTE_MODE_115200, "Rainforest", "1234");
+
+		FMGL_ConsoleAddLine(&Console, "Success, returning to normal mode...");
+
+		HAL_UART1_DeInit();
+
+		HAL_UART1_Init(HAL_BLUETOOTH_FULL_SPEED_BAUDRATE);
+
+		BluetoothContext = L2HAL_HC06_AttachToDevice(&UART1Handle);
+		if (!BluetoothContext.IsFound)
+		{
+			/* Switch to fullspeed mode failed */
+			FMGL_ConsoleAddLine(&Console, "FAILED");
+			L2HAL_Error(Generic);
+		}
+	}
+
+	FMGL_ConsoleAddLine(&Console, "Success");
+
 	/* Loading fonts */
 	FMGL_ConsoleAddLine(&Console, "Loading font:");
 	FMGL_ConsoleAddLine(&Console, CONSTANTS_PATHS_MAIN_FONT);
@@ -248,11 +280,13 @@ int main(int argc, char* argv[])
 		);
 
 		FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, buffer);
+		HAL_UART_Transmit(&UART1Handle, (uint8_t*)buffer, strlen(buffer) , L2HAL_HC06_UART_TIMEOUT);
 		linePosition += height;
 
 		/* Humidity */
 		sprintf(buffer, "Humidity: %.1f%%", creatureReadableValues.Humidity);
 		FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, buffer);
+		HAL_UART_Transmit(&UART1Handle, (uint8_t*)buffer, strlen(buffer) , L2HAL_HC06_UART_TIMEOUT);
 		linePosition += height;
 
 		/* Pressure */
@@ -266,6 +300,7 @@ int main(int argc, char* argv[])
 		);
 
 		FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, buffer);
+		HAL_UART_Transmit(&UART1Handle, (uint8_t*)buffer, strlen(buffer) , L2HAL_HC06_UART_TIMEOUT);
 		linePosition += height;
 
 		FMGL_API_PushFramebuffer(&FmglContext);
