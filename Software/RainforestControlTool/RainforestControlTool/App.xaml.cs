@@ -2,8 +2,15 @@
 
 public partial class App : Application
 {
-    public App()
+    /// <summary>
+    /// DI provider
+    /// </summary>
+    public static IServiceProvider ServiceProvider;
+    
+    public App(IServiceProvider serviceProvider)
     {
+        ServiceProvider = serviceProvider;
+        
         InitializeComponent();
     }
 

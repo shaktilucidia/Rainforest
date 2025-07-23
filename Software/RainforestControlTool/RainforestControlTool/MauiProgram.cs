@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
+using RainforestControlTool.Implementations.Services;
+using RainforestControlTool.Independent.Abstract.Services;
 
 namespace RainforestControlTool;
 
@@ -14,6 +16,16 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
+        
+        #region DI
+
+        #region Singletons
+        
+        builder.Services.AddSingleton<IPairedBluetoothDevicesEnumerator, PairedBluetoothDevicesEnumerator>();
+        
+        #endregion
+
+        #endregion
 
 #if DEBUG
         builder.Logging.AddDebug();

@@ -63,4 +63,8 @@
       <Folder Include="Models\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\RainforestControlTool.Independent\RainforestControlTool.Independent.csproj" />
+    </ItemGroup>
+
 </Project>
