@@ -22,5 +22,9 @@
  */
 #define CONSTANTS_PATHS_LOCALIZATION_CONFIG "/System/Configs/localization.config"
 
+/**
+ * Bluetooth settings config file
+ */
+#define CONSTANTS_PATHS_BLUETOOTH_CONFIG "/System/Configs/bluetooth.config"
 
 #endif /* INCLUDE_CONSTANTS_PATHS_H_ */

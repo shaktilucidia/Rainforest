@@ -172,36 +172,7 @@ int main(int argc, char* argv[])
 	FMGL_ConsoleAddLine(&Console, "Success");
 
 	/* Enabling bluetooth */
-	FMGL_ConsoleAddLine(&Console, "Setting-up Bluetooth...");
-
-	/* Fullspeed connection attempt */
-	HAL_UART1_Init(HAL_BLUETOOTH_FULL_SPEED_BAUDRATE);
-
-	BluetoothContext = L2HAL_HC06_AttachToDevice(&UART1Handle);
-	if (!BluetoothContext.IsFound)
-	{
-		FMGL_ConsoleAddLine(&Console, "Normal mode failed, trying first power on setup...");
-		FMGL_ConsoleAddLine(&Console, "Name: Rainforest");
-		FMGL_ConsoleAddLine(&Console, "Pin: 1234");
-
-		HAL_Bluetooth_FactorySetup(L2HAL_HC06_BAUDRARTE_MODE_115200, "Rainforest", "1234");
-
-		FMGL_ConsoleAddLine(&Console, "Success, returning to normal mode...");
-
-		HAL_UART1_DeInit();
-
-		HAL_UART1_Init(HAL_BLUETOOTH_FULL_SPEED_BAUDRATE);
-
-		BluetoothContext = L2HAL_HC06_AttachToDevice(&UART1Handle);
-		if (!BluetoothContext.IsFound)
-		{
-			/* Switch to fullspeed mode failed */
-			FMGL_ConsoleAddLine(&Console, "FAILED");
-			L2HAL_Error(Generic);
-		}
-	}
-
-	FMGL_ConsoleAddLine(&Console, "Success");
+	BluetoothContext = BluetoothSetup(CONSTANTS_PATHS_BLUETOOTH_CONFIG);
 
 	/* Loading fonts */
 	FMGL_ConsoleAddLine(&Console, "Loading font:");

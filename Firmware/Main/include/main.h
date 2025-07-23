@@ -16,6 +16,7 @@
 #include "constants/generic.h"
 #include "constants/paths.h"
 #include "constants/addresses.h"
+#include "bluetooth/bluetooth.h"
 
 /**
  * Called every SysTick, executed in interrupt context

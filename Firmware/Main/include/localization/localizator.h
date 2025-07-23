@@ -51,51 +51,51 @@ typedef struct
 	 */
 	enum LOCALIZATION_PRESSURE_UNITS PressureUnit;
 
-} LocalizationContextrStruct;
+} LocalizationContextStruct;
 
 /**
  * Initialize localizator and load settings from given file
  */
-LocalizationContextrStruct LocalizatorInit(char* path);
+LocalizationContextStruct LocalizatorInit(char* path);
 
 /**
  * Set temperature unit
  */
-void LocalizatorSetTemperatureUnit(LocalizationContextrStruct* context, enum LOCALIZATION_TEMPERATURE_UNITS unit);
+void LocalizatorSetTemperatureUnit(LocalizationContextStruct* context, enum LOCALIZATION_TEMPERATURE_UNITS unit);
 
 /**
  * Set pressure unit
  */
-void LocalizatorSetPressureUnit(LocalizationContextrStruct* context, enum LOCALIZATION_PRESSURE_UNITS unit);
+void LocalizatorSetPressureUnit(LocalizationContextStruct* context, enum LOCALIZATION_PRESSURE_UNITS unit);
 
 /**
  * Convert temperature from Kelvins to local format
  */
-double LocalizatorGetLocalizedTemperature(LocalizationContextrStruct* context, double t);
+double LocalizatorGetLocalizedTemperature(LocalizationContextStruct* context, double t);
 
 /**
  * Get localized temperature unit (like K, C or F)
  */
-char* LocalizatorGetLocalizedTemperatureUnit(LocalizationContextrStruct* context);
+char* LocalizatorGetLocalizedTemperatureUnit(LocalizationContextStruct* context);
 
 /**
  * Get localized temperature precision template (like "%.1f")
  */
-char* LocalizatorGetLocalizedTemperaturePrecisionTemplate(LocalizationContextrStruct* context);
+char* LocalizatorGetLocalizedTemperaturePrecisionTemplate(LocalizationContextStruct* context);
 
 /**
  * Convert pressure from Pascals to local format
  */
-double LocalizatorGetLocalizedPressure(LocalizationContextrStruct* context, double p);
+double LocalizatorGetLocalizedPressure(LocalizationContextStruct* context, double p);
 
 /**
  * Get localized pressure unit (like mmHg, hPa or inHg)
  */
-char* LocalizatorGetLocalizedPressureUnit(LocalizationContextrStruct* context);
+char* LocalizatorGetLocalizedPressureUnit(LocalizationContextStruct* context);
 
 /**
  * Get localized pressure precision template (like "%.1f", "%.0f", "%.4f%)
  */
-char* LocalizatorGetLocalizedPressurePrecisionTemplate(LocalizationContextrStruct* context);
+char* LocalizatorGetLocalizedPressurePrecisionTemplate(LocalizationContextStruct* context);
 
 #endif /* INCLUDE_LOCALIZATION_LOCALIZATOR_H_ */

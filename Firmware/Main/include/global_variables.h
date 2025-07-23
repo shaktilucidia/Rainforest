@@ -12,6 +12,7 @@
 #include "../libs/fatfs/ff.h"
 #include "localization/localizator.h"
 #include "../libs/l2hal/fmgl/console/include/console.h"
+#include "bluetooth/bluetooth.h"
 
 /* Put global variables (like contexts) here */
 
@@ -103,7 +104,7 @@ L2HAL_BME280_I2C_ContextStruct LocalSensor;
 /**
  * Localization context
  */
-LocalizationContextrStruct LocalizationContext;
+LocalizationContextStruct LocalizationContext;
 
 /**
  * Console
@@ -116,8 +117,13 @@ FMGL_Console_ContextStruct Console;
 UART_HandleTypeDef UART1Handle;
 
 /**
- * Bluetooth (HC-06) context
+ * Bluetooth module (HC-06) context
  */
-L2HAL_HC06_ContextStruct BluetoothContext;
+L2HAL_HC06_ContextStruct BluetoothModuleContext;
+
+/**
+ * Bluetooth context
+ */
+BluetoothContextStruct BluetoothContext;
 
 #endif /* INCLUDE_GLOBAL_VARIABLES_H_ */

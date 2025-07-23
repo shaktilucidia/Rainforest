@@ -11,9 +11,9 @@
 #include "../include/constants/addresses.h"
 #include "../include/constants/localization.h"
 
-LocalizationContextrStruct LocalizatorInit(char* path)
+LocalizationContextStruct LocalizatorInit(char* path)
 {
-	LocalizationContextrStruct localization = { 0 };
+	LocalizationContextStruct localization = { 0 };
 
 	localization.LocalizationConfigContext = ConfigLoad
 	(
@@ -55,7 +55,7 @@ LocalizationContextrStruct LocalizatorInit(char* path)
 	return localization;
 }
 
-void LocalizatorSetTemperatureUnit(LocalizationContextrStruct* context, enum LOCALIZATION_TEMPERATURE_UNITS unit)
+void LocalizatorSetTemperatureUnit(LocalizationContextStruct* context, enum LOCALIZATION_TEMPERATURE_UNITS unit)
 {
 	context->TemperatureUnit = unit;
 
@@ -63,14 +63,14 @@ void LocalizatorSetTemperatureUnit(LocalizationContextrStruct* context, enum LOC
 }
 
 
-void LocalizatorSetPressureUnit(LocalizationContextrStruct* context, enum LOCALIZATION_PRESSURE_UNITS unit)
+void LocalizatorSetPressureUnit(LocalizationContextStruct* context, enum LOCALIZATION_PRESSURE_UNITS unit)
 {
 	context->PressureUnit = unit;
 
 	ConfigSetIntValueByKey(&context->LocalizationConfigContext, CONSTATNS_LOCALIZATION_PRESSURE_UNIT_CONFIG_KEY, unit);
 }
 
-double LocalizatorGetLocalizedTemperature(LocalizationContextrStruct* context, double t)
+double LocalizatorGetLocalizedTemperature(LocalizationContextStruct* context, double t)
 {
 	switch (context->TemperatureUnit)
 	{
@@ -89,7 +89,7 @@ double LocalizatorGetLocalizedTemperature(LocalizationContextrStruct* context, d
 	}
 }
 
-char* LocalizatorGetLocalizedTemperatureUnit(LocalizationContextrStruct* context)
+char* LocalizatorGetLocalizedTemperatureUnit(LocalizationContextStruct* context)
 {
 	switch (context->TemperatureUnit)
 	{
@@ -108,13 +108,13 @@ char* LocalizatorGetLocalizedTemperatureUnit(LocalizationContextrStruct* context
 	}
 }
 
-char* LocalizatorGetLocalizedTemperaturePrecisionTemplate(LocalizationContextrStruct* context)
+char* LocalizatorGetLocalizedTemperaturePrecisionTemplate(LocalizationContextStruct* context)
 {
 	/* For now we always return %.1f */
 	return "%.1f";
 }
 
-double LocalizatorGetLocalizedPressure(LocalizationContextrStruct* context, double p)
+double LocalizatorGetLocalizedPressure(LocalizationContextStruct* context, double p)
 {
 	switch (context->PressureUnit)
 	{
@@ -133,7 +133,7 @@ double LocalizatorGetLocalizedPressure(LocalizationContextrStruct* context, doub
 	}
 }
 
-char* LocalizatorGetLocalizedPressureUnit(LocalizationContextrStruct* context)
+char* LocalizatorGetLocalizedPressureUnit(LocalizationContextStruct* context)
 {
 	switch (context->PressureUnit)
 	{
@@ -152,7 +152,7 @@ char* LocalizatorGetLocalizedPressureUnit(LocalizationContextrStruct* context)
 	}
 }
 
-char* LocalizatorGetLocalizedPressurePrecisionTemplate(LocalizationContextrStruct* context)
+char* LocalizatorGetLocalizedPressurePrecisionTemplate(LocalizationContextStruct* context)
 {
 	switch (context->PressureUnit)
 	{
