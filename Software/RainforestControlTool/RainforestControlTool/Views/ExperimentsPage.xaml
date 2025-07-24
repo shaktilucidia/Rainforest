@@ -46,7 +46,8 @@
                             Grid.Column="0"
                             Title="Select a station"
                             ItemsSource="{ Binding PairedDevices }"
-                            ItemDisplayBinding="{ Binding DisplayName }"/>
+                            ItemDisplayBinding="{ Binding DisplayName }"
+                            SelectedIndex="{ Binding SelectedStationIndex }" />
 
                         <Button
                             Style="{ StaticResource MarginatedButton }"
@@ -74,13 +75,15 @@
                             Style="{ StaticResource MarginatedButton }"
                             Grid.Row="0"
                             Grid.Column="0"
-                            Text="Connect" />
+                            Text="Connect"
+                            Command="{ Binding OnConnectCommand }" />
                         
                         <Button
                             Style="{ StaticResource MarginatedButton }"
                             Grid.Row="0"
                             Grid.Column="1"
-                            Text="Disconnect" />
+                            Text="Disconnect"
+                            Command="{ Binding OnDisconnectCommand }" />
                         
                     </Grid>
                     
