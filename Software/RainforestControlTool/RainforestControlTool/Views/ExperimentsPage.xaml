@@ -46,7 +46,7 @@
                             Grid.Column="0"
                             Title="Select a station"
                             ItemsSource="{ Binding PairedDevices }"
-                            ItemDisplayBinding="{ Binding Name }"/>
+                            ItemDisplayBinding="{ Binding DisplayName }"/>
 
                         <Button
                             Style="{ StaticResource MarginatedButton }"
@@ -54,7 +54,8 @@
                             Grid.Column="1"
                             HeightRequest="40"
                             WidthRequest="40"
-                            Text="R" />
+                            Text="R"
+                            Command = "{ Binding RefreshDevicesListCommand }" />
                         
                     </Grid>
                     

@@ -14,6 +14,11 @@ public class PairedBluetoothDevice
     /// MAC address
     /// </summary>
     public string MACAddress { get; }
+    
+    /// <summary>
+    /// Display name
+    /// </summary>
+    public string DisplayName => $"{Name} [{MACAddress}]";
 
     public PairedBluetoothDevice
     (

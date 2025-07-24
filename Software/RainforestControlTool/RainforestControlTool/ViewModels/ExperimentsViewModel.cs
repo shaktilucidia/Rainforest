@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows.Input;
 using RainforestControlTool.Independent.Abstract.Services;
 using RainforestControlTool.Independent.Models;
 
@@ -11,6 +12,8 @@ namespace RainforestControlTool.ViewModels;
 public class ExperimentsViewModel : INotifyPropertyChanged
 {
     private readonly IPairedBluetoothDevicesEnumerator _devicesEnumerator;
+
+    public event PropertyChangedEventHandler? PropertyChanged;
     
     #region Bindable properties
     
@@ -32,6 +35,15 @@ public class ExperimentsViewModel : INotifyPropertyChanged
     
     #endregion
     
+    #region Commands
+    
+    /// <summary>
+    /// Refresh paired devices list
+    /// </summary>
+    public ICommand RefreshDevicesListCommand { get; }
+    
+    #endregion
+    
     /// <summary>
     /// Paired devices
     /// </summary>
@@ -41,11 +53,20 @@ public class ExperimentsViewModel : INotifyPropertyChanged
     {
         _devicesEnumerator = App.ServiceProvider.GetService<IPairedBluetoothDevicesEnumerator>() ?? throw new InvalidOperationException("No bluetooth devices enumerator found!");
 
-        Task.WaitAll(RefreshDevicesListAsync());
+        #region Binding commands
+        
+        RefreshDevicesListCommand = new Command(async () => await OnRefreshDevicesListCommandAsync());
+        
+        #endregion
+        
+        Task.WaitAll(OnRefreshDevicesListCommandAsync());
+    }
+
+    private Task OnRefreshDevicesListCommandAsync()
+    {
+        return RefreshDevicesListAsync();
     }
     
-    public event PropertyChangedEventHandler? PropertyChanged;
-
     protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
