@@ -22,6 +22,7 @@ public static class MauiProgram
         #region Singletons
         
         builder.Services.AddSingleton<IPairedBluetoothDevicesEnumerator, PairedBluetoothDevicesEnumerator>();
+        builder.Services.AddSingleton<IBluetoothCommunicator, BluetoothCommunicator>();
         
         #endregion
 

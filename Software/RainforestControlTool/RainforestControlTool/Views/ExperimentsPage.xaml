@@ -76,18 +76,33 @@
                             Grid.Row="0"
                             Grid.Column="0"
                             Text="Connect"
-                            Command="{ Binding OnConnectCommand }" />
+                            Command="{ Binding ConnectCommand }" />
                         
                         <Button
                             Style="{ StaticResource MarginatedButton }"
                             Grid.Row="0"
                             Grid.Column="1"
                             Text="Disconnect"
-                            Command="{ Binding OnDisconnectCommand }" />
+                            Command="{ Binding DisconnectCommand }" />
                         
                     </Grid>
                     
                 </VerticalStackLayout>
+            </Border>
+            
+            <!-- Console -->
+            <Border
+                Style="{ StaticResource RoundedBorder }">
+                
+                <VerticalStackLayout>
+                    
+                    <Editor
+                        IsReadOnly="True"
+                        Text="{ Binding ConsoleText }"
+                        HeightRequest="300" />
+                    
+                </VerticalStackLayout>
+            
             </Border>
             
         </VerticalStackLayout>

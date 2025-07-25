@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Windows.Input;
 using RainforestControlTool.Independent.Abstract.Services;
 using RainforestControlTool.Independent.Models;
@@ -13,6 +14,7 @@ namespace RainforestControlTool.ViewModels;
 public class ExperimentsViewModel : INotifyPropertyChanged
 {
     private readonly IPairedBluetoothDevicesEnumerator _devicesEnumerator;
+    private readonly IBluetoothCommunicator _bluetoothCommunicator;
 
     public event PropertyChangedEventHandler? PropertyChanged;
     
@@ -30,7 +32,7 @@ public class ExperimentsViewModel : INotifyPropertyChanged
         set
         {
             _devices = value;
-            OnPropertyChanged(nameof(PairedDevices));
+            OnPropertyChanged();
         }
     }
     
@@ -46,8 +48,24 @@ public class ExperimentsViewModel : INotifyPropertyChanged
         set
         {
             _selectedStationIndex = value;
-            OnPropertyChanged(nameof(SelectedStationIndex));
-            ((Command)OnConnectCommand).ChangeCanExecute();
+            OnPropertyChanged();
+            ((Command)ConnectCommand).ChangeCanExecute();
+        }
+    }
+    
+    /// <summary>
+    /// Console text
+    /// </summary>
+    public string ConsoleText
+    {
+        get
+        {
+            return _consoleText;
+        }
+        set
+        {
+            _consoleText = value;
+            OnPropertyChanged();
         }
     }
     
@@ -60,9 +78,9 @@ public class ExperimentsViewModel : INotifyPropertyChanged
     /// </summary>
     public ICommand RefreshDevicesListCommand { get; }
     
-    public ICommand OnConnectCommand { get; }
+    public ICommand ConnectCommand { get; }
     
-    public ICommand OnDisconnectCommand { get; }
+    public ICommand DisconnectCommand { get; }
     
     #endregion
     
@@ -82,18 +100,28 @@ public class ExperimentsViewModel : INotifyPropertyChanged
     /// Main model
     /// </summary>
     private MainModel _mainModel = new MainModel();
+
+    /// <summary>
+    /// Text on console
+    /// </summary>
+    private string _consoleText = String.Empty;
     
     #endregion
     
     public ExperimentsViewModel()
     {
+        #region DI
+        
         _devicesEnumerator = App.ServiceProvider.GetService<IPairedBluetoothDevicesEnumerator>() ?? throw new InvalidOperationException("No bluetooth devices enumerator found!");
+        _bluetoothCommunicator = App.ServiceProvider.GetService<IBluetoothCommunicator>() ?? throw new InvalidOperationException("No bluetooth communicator found!");
+        
+        #endregion
 
         #region Binding commands
         
-        RefreshDevicesListCommand = new Command(async () => await OnRefreshDevicesListCommandAsync());
-        OnConnectCommand = new Command(async () => await OnConnectCommandAsync(), CanExecuteConnectCommand);
-        OnDisconnectCommand = new Command(async () => await OnDisconnectCommandAsync(), CanExecuteDisconnectCommand);
+        RefreshDevicesListCommand = new Command(async () => await OnRefreshDevicesListCommandAsync(), CanExecuteRefreshDevicesListCommand);
+        ConnectCommand = new Command(async () => await OnConnectCommandAsync(), CanExecuteConnectCommand);
+        DisconnectCommand = new Command(async () => await OnDisconnectCommandAsync(), CanExecuteDisconnectCommand);
         
         #endregion
         
@@ -104,13 +132,27 @@ public class ExperimentsViewModel : INotifyPropertyChanged
     {
         return RefreshDevicesListAsync();
     }
+    
+    private bool CanExecuteRefreshDevicesListCommand()
+    {
+        return _mainModel.ConnectionState == ConnectionState.Disconnected;
+    }
 
     private async Task OnConnectCommandAsync()
     {
-        _mainModel.ConnectionState = ConnectionState.Connected;
+        _mainModel.ConnectionState = ConnectionState.Connecting;
+
+        await _bluetoothCommunicator.ConnectAsync
+        (
+            PairedDevices[SelectedStationIndex].MACAddress,
+            OnConnected,
+            OnDataReceived,
+            OnDisconnected
+        );
         
-        ((Command)OnConnectCommand).ChangeCanExecute();
-        ((Command)OnDisconnectCommand).ChangeCanExecute();
+        ((Command)RefreshDevicesListCommand).ChangeCanExecute();
+        ((Command)ConnectCommand).ChangeCanExecute();
+        ((Command)DisconnectCommand).ChangeCanExecute();
     }
 
     private bool CanExecuteConnectCommand()
@@ -120,10 +162,7 @@ public class ExperimentsViewModel : INotifyPropertyChanged
 
     private async Task OnDisconnectCommandAsync()
     {
-        _mainModel.ConnectionState = ConnectionState.Disconnected;
-        
-        ((Command)OnConnectCommand).ChangeCanExecute();
-        ((Command)OnDisconnectCommand).ChangeCanExecute();
+        _bluetoothCommunicator.Disconnect();
     }
 
     private bool CanExecuteDisconnectCommand()
@@ -147,5 +186,24 @@ public class ExperimentsViewModel : INotifyPropertyChanged
     private async Task RefreshDevicesListAsync()
     {
         PairedDevices = (await _devicesEnumerator.EnumerateAsync()).ToList();
+    }
+
+    private void OnConnected()
+    {
+        _mainModel.ConnectionState = ConnectionState.Connected;
+    }
+
+    private void OnDataReceived(byte[] data)
+    {
+        ConsoleText += Encoding.Default.GetString(data);
+    }
+
+    private void OnDisconnected()
+    {
+        _mainModel.ConnectionState = ConnectionState.Disconnected;
+        
+        ((Command)RefreshDevicesListCommand).ChangeCanExecute();
+        ((Command)ConnectCommand).ChangeCanExecute();
+        ((Command)DisconnectCommand).ChangeCanExecute();
     }
 }
