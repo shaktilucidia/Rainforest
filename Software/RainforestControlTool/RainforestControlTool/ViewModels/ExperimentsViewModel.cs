@@ -15,6 +15,7 @@ public class ExperimentsViewModel : INotifyPropertyChanged
 {
     private readonly IPairedBluetoothDevicesEnumerator _devicesEnumerator;
     private readonly IBluetoothCommunicator _bluetoothCommunicator;
+    private readonly IStationLowLevelPacketsProcessor _stationLowLevelPacketsProcessor;
 
     public event PropertyChangedEventHandler? PropertyChanged;
     
@@ -81,7 +82,9 @@ public class ExperimentsViewModel : INotifyPropertyChanged
     public ICommand ConnectCommand { get; }
     
     public ICommand DisconnectCommand { get; }
-    
+
+    public ICommand DoYiffCommand { get; }
+
     #endregion
     
     #region Private
@@ -114,6 +117,7 @@ public class ExperimentsViewModel : INotifyPropertyChanged
         
         _devicesEnumerator = App.ServiceProvider.GetService<IPairedBluetoothDevicesEnumerator>() ?? throw new InvalidOperationException("No bluetooth devices enumerator found!");
         _bluetoothCommunicator = App.ServiceProvider.GetService<IBluetoothCommunicator>() ?? throw new InvalidOperationException("No bluetooth communicator found!");
+        _stationLowLevelPacketsProcessor = App.ServiceProvider.GetService<IStationLowLevelPacketsProcessor>() ?? throw new InvalidOperationException("No station low-level packets processor found!");
         
         #endregion
 
@@ -122,6 +126,7 @@ public class ExperimentsViewModel : INotifyPropertyChanged
         RefreshDevicesListCommand = new Command(async () => await OnRefreshDevicesListCommandAsync(), CanExecuteRefreshDevicesListCommand);
         ConnectCommand = new Command(async () => await OnConnectCommandAsync(), CanExecuteConnectCommand);
         DisconnectCommand = new Command(async () => await OnDisconnectCommandAsync(), CanExecuteDisconnectCommand);
+        DoYiffCommand = new Command(OnDoYiffCommand);
         
         #endregion
         
@@ -141,6 +146,7 @@ public class ExperimentsViewModel : INotifyPropertyChanged
     private async Task OnConnectCommandAsync()
     {
         _mainModel.ConnectionState = ConnectionState.Connecting;
+        _mainModel.ConnectedStation = PairedDevices[SelectedStationIndex];
 
         await _bluetoothCommunicator.ConnectAsync
         (
@@ -201,9 +207,15 @@ public class ExperimentsViewModel : INotifyPropertyChanged
     private void OnDisconnected()
     {
         _mainModel.ConnectionState = ConnectionState.Disconnected;
+        _mainModel.ConnectedStation = null;
         
         ((Command)RefreshDevicesListCommand).ChangeCanExecute();
         ((Command)ConnectCommand).ChangeCanExecute();
         ((Command)DisconnectCommand).ChangeCanExecute();
+    }
+
+    private void OnDoYiffCommand()
+    {
+        _stationLowLevelPacketsProcessor.SendPacket(Encoding.Default.GetBytes("Yiff! Yiff! Yiff!"));
     }
 }

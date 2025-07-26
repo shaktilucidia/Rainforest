@@ -105,6 +105,11 @@
             
             </Border>
             
+            <Button
+                Style="{ StaticResource MarginatedButton }"
+                Text="Do Yiff!"
+                Command="{ Binding DoYiffCommand }" />
+            
         </VerticalStackLayout>
     </ScrollView>
     

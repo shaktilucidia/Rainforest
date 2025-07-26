@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using RainforestControlTool.Implementations.Services;
 using RainforestControlTool.Independent.Abstract.Services;
+using RainforestControlTool.Independent.Implementations.Services;
 
 namespace RainforestControlTool;
 
@@ -23,6 +24,7 @@ public static class MauiProgram
         
         builder.Services.AddSingleton<IPairedBluetoothDevicesEnumerator, PairedBluetoothDevicesEnumerator>();
         builder.Services.AddSingleton<IBluetoothCommunicator, BluetoothCommunicator>();
+        builder.Services.AddSingleton<IStationLowLevelPacketsProcessor, StationLowLevelPacketsProcessor>();
         
         #endregion
 
