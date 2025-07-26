@@ -17,11 +17,14 @@
 #include "constants/paths.h"
 #include "constants/addresses.h"
 #include "bluetooth/bluetooth.h"
+#include "packets_processor/low_level_packets_processor.h"
 
 /**
  * Called every SysTick, executed in interrupt context
  */
 void OnSysTick(void);
+
+void ShowNextMeasurement(void);
 
 
 

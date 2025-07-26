@@ -208,12 +208,21 @@ int main(int argc, char* argv[])
 
 	FMGL_ConsoleAddLine(&Console, "Success");
 
+	/* Setting up CRC calculator */
+	CrcContext = L2HAL_CRC_Init();
+
 	/* Setup SysTick handlers */
 	L2HAL_SysTick_RegisterHandler(&OnSysTick);
 
-	/* Main loop enter */
+	/* Clear screen before going to main mode */
 	FMGL_API_ClearScreen(&FmglContext);
 	FMGL_API_PushFramebuffer(&FmglContext);
+
+	/* Starting to listen for packets */
+	LLPP_Init();
+	LLPP_StartListen();
+
+	/* Main loop enter */
 
 	while(true)
 	{
@@ -282,6 +291,11 @@ int main(int argc, char* argv[])
  * Called every SysTick, executed in interrupt context
  */
 void OnSysTick(void)
+{
+
+}
+
+void ShowNextMeasurement(void)
 {
 
 }

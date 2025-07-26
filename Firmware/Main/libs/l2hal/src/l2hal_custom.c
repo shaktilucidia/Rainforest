@@ -378,4 +378,18 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
 	}
 }
 
+void HAL_CRC_MspInit(CRC_HandleTypeDef *hcrc)
+{
+	if (CRC == hcrc->Instance)
+	{
+		__HAL_RCC_CRC_CLK_ENABLE();
+	}
+}
 
+void HAL_CRC_MspDeInit(CRC_HandleTypeDef *hcrc)
+{
+	if (CRC == hcrc->Instance)
+	{
+	__HAL_RCC_CRC_CLK_DISABLE();
+	}
+}

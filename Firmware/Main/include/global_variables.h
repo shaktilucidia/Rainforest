@@ -126,4 +126,9 @@ L2HAL_HC06_ContextStruct BluetoothModuleContext;
  */
 BluetoothContextStruct BluetoothContext;
 
+/**
+ * CRC calculator context
+ */
+L2HAL_CRCContextStruct CrcContext;
+
 #endif /* INCLUDE_GLOBAL_VARIABLES_H_ */
