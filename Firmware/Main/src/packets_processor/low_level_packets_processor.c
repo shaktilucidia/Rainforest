@@ -220,7 +220,7 @@ void LLPP_Send(uint8_t* payload, uint8_t payloadLength)
 
 	uint8_t* packetTxBuffer = malloc(packetTxLength);
 
-	packetTxBuffer[0] = payloadLength;
+	packetTxBuffer[0] = packetTxLength;
 
 	memcpy((uint8_t*)&packetTxBuffer[1], payload, payloadLength);
 
