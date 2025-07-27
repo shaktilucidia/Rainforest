@@ -14,6 +14,9 @@ void LLPP_Init(void (*onPacketReceived) (uint8_t* payload, uint8_t payloadLength
 	LLPP_OnPacketReceivedPtr = onPacketReceived;
 
 	LLPP_State = LLPP_STATE_NOT_LISTEN;
+	LLPP_PacketRxBuffer = NULL;
+	LLPP_PacketTxBuffer = NULL;
+	LLPP_PacketTxInProgress = false;
 
 	L2HAL_SysTick_RegisterHandler(&LLPP_Tick);
 }
@@ -165,3 +168,67 @@ void LLPP_FreePacketRxBuffer(void)
 	free(LLPP_PacketRxBuffer);
 	LLPP_PacketRxBuffer = NULL;
 }
+
+void LLPP_FreePacketTxBuffer(void)
+{
+	free(LLPP_PacketTxBuffer);
+	LLPP_PacketTxBuffer = NULL;
+}
+
+void LLPP_SendNonBlocking(uint8_t* data, uint8_t length)
+{
+	if (LLPP_PacketTxInProgress)
+	{
+		/* Already transmitting, collision */
+		LLPP_FreePacketTxBuffer();
+		L2HAL_Error(Generic);
+	}
+
+	LLPP_PacketTxLength = length;
+	LLPP_PacketTxBuffer = malloc(LLPP_PacketTxLength);
+
+	memcpy(LLPP_PacketTxBuffer, data, LLPP_PacketTxLength);
+
+	LLPP_PacketTxInProgress = true;
+
+	if (HAL_OK != HAL_UART_Transmit_IT(&UART1Handle, LLPP_PacketTxBuffer, LLPP_PacketTxLength))
+	{
+
+		LLPP_FreePacketTxBuffer();
+		L2HAL_Error(Generic);
+	}
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
+{
+	if (USART1 != UartHandle->Instance)
+	{
+		return;
+	}
+
+	LLPP_PacketTxInProgress = false;
+	LLPP_FreePacketTxBuffer();
+}
+
+void LLPP_Send(uint8_t* payload, uint8_t payloadLength)
+{
+	uint8_t packetTxLength = payloadLength + LLPP_PACKET_PAYLOAD_DELTA;
+	if (packetTxLength < LLPP_PACKET_MIN_SIZE || packetTxLength > LLPP_PACKET_MAX_SIZE)
+	{
+		L2HAL_Error(Generic);
+	}
+
+	uint8_t* packetTxBuffer = malloc(packetTxLength);
+
+	packetTxBuffer[0] = payloadLength;
+
+	memcpy((uint8_t*)&packetTxBuffer[1], payload, payloadLength);
+
+	uint32_t crc = L2HAL_CRC_Calculate(&CrcContext, packetTxBuffer, packetTxLength - sizeof(uint32_t));
+	memcpy((uint8_t*)&packetTxBuffer[packetTxLength - sizeof(uint32_t)], &crc, sizeof(uint32_t));
+
+	LLPP_SendNonBlocking(packetTxBuffer, packetTxLength);
+
+	free(packetTxBuffer);
+}
+

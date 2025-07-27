@@ -229,6 +229,11 @@ int main(int argc, char* argv[])
 		{
 			IsNewPacketReceived = false;
 
+			uint8_t buffer[256];
+			sprintf(buffer, "Acknowledged: %s", PacketPayload);
+
+			LLPP_Send(buffer, strlen(buffer));
+
 			FMGL_ConsoleAddLine(&Console, PacketPayload);
 		}
 	}

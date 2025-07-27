@@ -10,6 +10,7 @@
 
 #include "low_level_packets_processor.h"
 #include <stdint.h>
+#include <stdbool.h>
 #include "../../libs/l2hal/l2hal_config.h"
 
 extern UART_HandleTypeDef UART1Handle;
@@ -74,7 +75,6 @@ uint8_t LLPP_RxByteBuffer;
 /**
  * Packet is being accumulated here
  */
-//uint8_t LLPP_PacketRxBuffer[LLPP_PACKET_MAX_SIZE];
 uint8_t* LLPP_PacketRxBuffer;
 
 /**
@@ -87,13 +87,26 @@ uint8_t LLPP_PacketRxBufferIndex;
  */
 uint16_t LLPP_PacketRxTimeoutTimer;
 
-
 /**
  * When first byte of packet came, we are able to detect packet length. That length
  * is stored here
  */
 uint8_t LLPP_ExpectedPacketLength;
 
+/**
+ * Outgoing packet buffer
+ */
+uint8_t* LLPP_PacketTxBuffer;
+
+/**
+ * Outgoing packet length
+ */
+uint8_t LLPP_PacketTxLength;
+
+/**
+ * True if outgoing packet is being transmitted
+ */
+bool LLPP_PacketTxInProgress;
 
 /**
  * Call this every millisecond
@@ -109,6 +122,16 @@ void LLPP_AskForNextByte(void);
  * Free packet RX buffer and set pointer no NULL
  */
 void LLPP_FreePacketRxBuffer(void);
+
+/**
+ * Free packet TX buffer and set pointer no NULL
+ */
+void LLPP_FreePacketTxBuffer(void);
+
+/**
+ * Send data in non-blocking mode (data copied to internal buffer on call)
+ */
+void LLPP_SendNonBlocking(uint8_t* data, uint8_t length);
 
 
 #endif /* INCLUDE_PACKETS_PROCESSOR_LOW_LEVEL_PACKETS_PROCESSOR_PRIVATE_H_ */
