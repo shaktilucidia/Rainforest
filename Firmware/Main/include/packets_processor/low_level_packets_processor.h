@@ -13,8 +13,11 @@
 
 /**
  * Call it before working with packets processor
+ * @param onPacketReceived Pointer to function, called when new correct packet received. !! FUNCTION CALLED IN UART INTERRUPT CONTEXT !!
+ * @param payload Payload (packet length and CRC are stripped). This pointer valid only until exit from function
+ * @param payloadLength Payload length
  */
-void LLPP_Init(void);
+void LLPP_Init(void (*onPacketReceived) (uint8_t* payload, uint8_t payloadLength));
 
 /**
  * Call it to start to listen for incoming packets.

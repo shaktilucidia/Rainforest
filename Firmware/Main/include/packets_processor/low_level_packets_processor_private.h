@@ -10,7 +10,6 @@
 
 #include "low_level_packets_processor.h"
 #include <stdint.h>
-#include <stdbool.h>
 #include "../../libs/l2hal/l2hal_config.h"
 
 extern UART_HandleTypeDef UART1Handle;
@@ -22,9 +21,14 @@ extern L2HAL_CRCContextStruct CrcContext;
 #define LLPP_PACKET_NEXT_BYTE_TIMEOUT 1000U
 
 /**
+ * Payload length is less than full packet length by this value
+ */
+#define LLPP_PACKET_PAYLOAD_DELTA 5U
+
+/**
  * Possible packet sizes
  */
-#define LLPP_PACKET_MIN_SIZE 6U
+#define LLPP_PACKET_MIN_SIZE (LLPP_PACKET_PAYLOAD_DELTA + 1U)
 #define LLPP_PACKET_MAX_SIZE 255U /* Actually not needed IN THIS SPECIFIC CASE, because max. length is 255 */
 
 /**
@@ -49,6 +53,13 @@ typedef enum
 
 }
 LLPP_StateEnum;
+
+/**
+ * Pointer to function, called when new correct packet received. !! FUNCTION CALLED IN UART INTERRUPT CONTEXT !!
+ * @param payload Payload (packet length and CRC are stripped). This pointer valid only until exit from function
+ * @param payloadLength Payload length
+ */
+void (*LLPP_OnPacketReceivedPtr) (uint8_t* payload, uint8_t payloadLength);
 
 /**
  * Packets state machine state
@@ -78,7 +89,7 @@ uint16_t LLPP_PacketRxTimeoutTimer;
 /**
  * If true then we have packet, ready to be processed.
  */
-bool LLPP_IsPacketReady;
+//bool LLPP_IsPacketReady;
 
 /**
  * When first byte of packet came, we are able to detect packet length. That length
@@ -89,12 +100,12 @@ uint8_t LLPP_ExpectedPacketLength;
 /**
  * Full length of received packet
  */
-uint8_t LLPP_ReceivedPacketFullLength;
+//uint8_t LLPP_ReceivedPacketFullLength;
 
 /**
  * Received packet, ready to be processed
  */
-uint8_t LLPP_ReceivedPacket[LLPP_PACKET_MAX_SIZE];
+//uint8_t LLPP_ReceivedPacket[LLPP_PACKET_MAX_SIZE];
 
 /**
  * Call this every millisecond

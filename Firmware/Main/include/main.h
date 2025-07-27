@@ -24,7 +24,13 @@
  */
 void OnSysTick(void);
 
-void ShowNextMeasurement(void);
+volatile bool IsNewPacketReceived = false;
+volatile uint8_t PacketPayload[255];
+
+/**
+ * For test purposes
+ */
+void OnPacketReceived(uint8_t* payload, uint8_t payloadLength);
 
 
 

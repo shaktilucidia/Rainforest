@@ -7,11 +7,13 @@
 
 #include "../../include/packets_processor/low_level_packets_processor.h"
 #include "../../include/packets_processor/low_level_packets_processor_private.h"
+#include <stdlib.h>
 
-void LLPP_Init(void)
+void LLPP_Init(void (*onPacketReceived) (uint8_t* payload, uint8_t payloadLength))
 {
+	LLPP_OnPacketReceivedPtr = onPacketReceived;
+
 	LLPP_State = LLPP_STATE_NOT_LISTEN;
-	LLPP_IsPacketReady = false;
 
 	L2HAL_SysTick_RegisterHandler(&LLPP_Tick);
 }
@@ -103,11 +105,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 			if (LLPP_PacketRxBufferIndex == LLPP_ExpectedPacketLength)
 			{
 				/* We have a new packet */
-				if (LLPP_IsPacketReady)
-				{
-					/* Previous packet isn't processed yet, dying */
-					L2HAL_Error(Generic);
-				}
 
 				/* CRC check */
 				volatile uint32_t calculatedCrc = L2HAL_CRC_Calculate(&CrcContext, LLPP_PacketRxBuffer, LLPP_ExpectedPacketLength - sizeof(uint32_t));
@@ -127,9 +124,18 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 
 				LLPP_State = LLPP_STATE_LISTEN;
 
-				LLPP_ReceivedPacketFullLength = LLPP_ExpectedPacketLength;
-				memcpy(LLPP_ReceivedPacket, LLPP_PacketRxBuffer, LLPP_ReceivedPacketFullLength);
-				LLPP_IsPacketReady = true;
+				uint8_t payloadLength = LLPP_ExpectedPacketLength - LLPP_PACKET_PAYLOAD_DELTA;
+				uint8_t* payload = malloc(payloadLength);
+
+				memcpy(payload, (uint8_t*)&LLPP_PacketRxBuffer[1], payloadLength);
+
+				LLPP_OnPacketReceivedPtr(payload, payloadLength);
+
+				free(payload);
+
+				//LLPP_ReceivedPacketFullLength = LLPP_ExpectedPacketLength;
+				//memcpy(LLPP_ReceivedPacket, LLPP_PacketRxBuffer, LLPP_ReceivedPacketFullLength);
+				//LLPP_IsPacketReady = true;
 			}
 
 			LLPP_AskForNextByte();

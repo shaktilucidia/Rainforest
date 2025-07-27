@@ -215,16 +215,25 @@ int main(int argc, char* argv[])
 	L2HAL_SysTick_RegisterHandler(&OnSysTick);
 
 	/* Clear screen before going to main mode */
-	FMGL_API_ClearScreen(&FmglContext);
-	FMGL_API_PushFramebuffer(&FmglContext);
+	/*FMGL_API_ClearScreen(&FmglContext);
+	FMGL_API_PushFramebuffer(&FmglContext);*/
 
 	/* Starting to listen for packets */
-	LLPP_Init();
+	LLPP_Init(OnPacketReceived);
 	LLPP_StartListen();
 
 	/* Main loop enter */
+	while (true)
+	{
+		if (IsNewPacketReceived)
+		{
+			IsNewPacketReceived = false;
 
-	while(true)
+			FMGL_ConsoleAddLine(&Console, PacketPayload);
+		}
+	}
+
+	/*while(true)
 	{
 		L2HAL_BME280_I2C_StartForcedMeasurement
 		(
@@ -238,7 +247,7 @@ int main(int argc, char* argv[])
 
 		L2HAL_BME280_I2C_RawMeasurementsStruct rawMeasurements = L2HAL_BME280_I2C_GetMeasurementRaw(&LocalSensor);
 
-		/* Creature-readable values */
+		 Creature-readable values
 		L2HAL_BME280_I2C_CreatureReadableMeasurementsStruct creatureReadableValues = L2HAL_BME280_I2C_GetCreatureReadableValues(&LocalSensor, rawMeasurements);
 
 		char buffer[32];
@@ -249,7 +258,7 @@ int main(int argc, char* argv[])
 
 		FMGL_API_ClearScreen(&FmglContext);
 
-		/* Temperature */
+		 Temperature
 		sprintf(template, "Temperature: %s%%s", LocalizatorGetLocalizedTemperaturePrecisionTemplate(&LocalizationContext));
 		sprintf
 		(
@@ -263,13 +272,13 @@ int main(int argc, char* argv[])
 		HAL_UART_Transmit(&UART1Handle, (uint8_t*)buffer, strlen(buffer) , L2HAL_HC06_UART_TIMEOUT);
 		linePosition += height;
 
-		/* Humidity */
+		 Humidity
 		sprintf(buffer, "Humidity: %.1f%%", creatureReadableValues.Humidity);
 		FMGL_API_RenderTextWithLineBreaks(&FmglContext, &MainFont, 0, linePosition, &width, &height, false, buffer);
 		HAL_UART_Transmit(&UART1Handle, (uint8_t*)buffer, strlen(buffer) , L2HAL_HC06_UART_TIMEOUT);
 		linePosition += height;
 
-		/* Pressure */
+		 Pressure
 		sprintf(template, "Pressure: %s %%s", LocalizatorGetLocalizedPressurePrecisionTemplate(&LocalizationContext));
 		sprintf
 		(
@@ -284,7 +293,7 @@ int main(int argc, char* argv[])
 		linePosition += height;
 
 		FMGL_API_PushFramebuffer(&FmglContext);
-	}
+	}*/
 }
 
 /**
@@ -295,9 +304,12 @@ void OnSysTick(void)
 
 }
 
-void ShowNextMeasurement(void)
+void OnPacketReceived(uint8_t* payload, uint8_t payloadLength)
 {
+	memcpy(PacketPayload, payload, payloadLength);
+	PacketPayload[payloadLength] = 0x00;
 
+	IsNewPacketReceived = true;
 }
 
 
