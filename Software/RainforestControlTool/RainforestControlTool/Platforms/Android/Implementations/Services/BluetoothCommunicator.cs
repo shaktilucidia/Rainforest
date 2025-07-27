@@ -1,4 +1,5 @@
 using Android.Bluetooth;
+using Android.Media;
 using Java.Util;
 using RainforestControlTool.Independent.Abstract.Services;
 
@@ -101,10 +102,7 @@ public class BluetoothCommunicator : IBluetoothCommunicator
             {
                 var readSize = _socket.InputStream.Read(buffer, 0, ReadBufferSize);
                 
-                MainThread.BeginInvokeOnMainThread(() =>
-                {
-                    _onDataReceived(buffer.Take(readSize).ToArray());
-                });
+                _onDataReceived(buffer.Take(readSize).ToArray());
             }
             catch
             {

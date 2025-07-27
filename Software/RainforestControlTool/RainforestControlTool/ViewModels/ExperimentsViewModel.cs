@@ -122,7 +122,7 @@ public class ExperimentsViewModel : INotifyPropertyChanged
         _stationLowLevelPacketsProcessor = App.ServiceProvider.GetService<IStationLowLevelPacketsProcessor>() ?? throw new InvalidOperationException("No station low-level packets processor found!");
         
         #endregion
-
+        
         #region Binding commands
         
         RefreshDevicesListCommand = new Command(async () => await OnRefreshDevicesListCommandAsync(), CanExecuteRefreshDevicesListCommand);
@@ -155,7 +155,7 @@ public class ExperimentsViewModel : INotifyPropertyChanged
         (
             PairedDevices[SelectedStationIndex].MACAddress,
             OnConnected,
-            OnDataReceived,
+            _stationLowLevelPacketsProcessor.OnDataReceived,
             OnDisconnected
         );
         
@@ -200,11 +200,13 @@ public class ExperimentsViewModel : INotifyPropertyChanged
     private void OnConnected()
     {
         _mainModel.ConnectionState = ConnectionState.Connected;
+        _stationLowLevelPacketsProcessor.Listen(OnPacketReceived);
+        ConsoleText = String.Empty;
     }
 
-    private void OnDataReceived(byte[] data)
+    private void OnPacketReceived(byte[] data)
     {
-        ConsoleText += Encoding.Default.GetString(data);
+        ConsoleText += $"{ Encoding.Default.GetString(data) }\n";
     }
 
     private void OnDisconnected()

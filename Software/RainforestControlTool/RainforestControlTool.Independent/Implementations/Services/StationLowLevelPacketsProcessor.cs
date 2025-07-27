@@ -1,3 +1,4 @@
+using System.Text;
 using RainforestControlTool.Independent.Abstract.Services;
 using RainforestControlTool.Independent.Helpers;
 
@@ -5,6 +6,15 @@ namespace RainforestControlTool.Independent.Implementations.Services;
 
 public class StationLowLevelPacketsProcessor : IStationLowLevelPacketsProcessor
 {
+    /// <summary>
+    /// Receiver state machine state
+    /// </summary>
+    private enum ReceiverState
+    {
+        Listen,
+        InProgress
+    };
+    
     /// <summary>
     /// Add this to payload to get full packet lenght. 1: lenght byte + 4: crc32 bytes
     /// </summary>
@@ -15,6 +25,14 @@ public class StationLowLevelPacketsProcessor : IStationLowLevelPacketsProcessor
     
     private readonly IBluetoothCommunicator _bluetoothCommunicator;
 
+    private OnPacketReceivedDelegate? _onPacketReceived = null;
+    
+    private ReceiverState _receiverState = ReceiverState.Listen;
+    
+    private int _receiverExpectedPacketLength = 0;
+    
+    private readonly List<byte> _receiverRawPacketData = new List<byte>();
+
     public StationLowLevelPacketsProcessor
     (
         IBluetoothCommunicator bluetoothCommunicator
@@ -22,7 +40,7 @@ public class StationLowLevelPacketsProcessor : IStationLowLevelPacketsProcessor
     {
         _bluetoothCommunicator = bluetoothCommunicator;
     }
-    
+
     public void SendPacket(byte[] payload)
     {
         _ = payload ?? throw new ArgumentNullException(nameof(payload));
@@ -63,5 +81,89 @@ public class StationLowLevelPacketsProcessor : IStationLowLevelPacketsProcessor
         );
 
         _bluetoothCommunicator.Send(fullPacket.ToArray());
+    }
+
+    public void Listen(OnPacketReceivedDelegate onPacketReceived)
+    {
+        _onPacketReceived = onPacketReceived ?? throw new ArgumentNullException(nameof(onPacketReceived));
+        
+        _receiverState = ReceiverState.Listen;
+        _receiverRawPacketData.Clear();
+    }
+
+    public void OnDataReceived(byte[] data)
+    {
+        foreach (var b in data)
+        {
+            OnNextByteReceived(b);
+        }
+    }
+
+    private void OnNextByteReceived(byte data)
+    {
+        switch (_receiverState)
+        {
+            case ReceiverState.Listen:
+                _receiverExpectedPacketLength = data;
+
+                if
+                (
+                    _receiverExpectedPacketLength < MinPayloadLength + HeaderAndCrcLength
+                    ||
+                    _receiverExpectedPacketLength > MaxPayloadLength + HeaderAndCrcLength
+                )
+                {
+                    // Invalid packet
+                    return;
+                }
+                
+                _receiverRawPacketData.Add(data);
+                _receiverState = ReceiverState.InProgress;
+                break;
+            
+            case ReceiverState.InProgress:
+                _receiverRawPacketData.Add(data);
+
+                if (_receiverRawPacketData.Count == _receiverExpectedPacketLength)
+                {
+                    // We have new packet, checking CRC
+                    var dataExceptCrcLength = _receiverExpectedPacketLength - sizeof(UInt32);
+                    var calculatedCrc = STM32CrcGenerator
+                        .CalculateStmCrc32
+                        (
+                            _receiverRawPacketData
+                            .Take(dataExceptCrcLength)
+                            .ToArray()
+                        );
+                    
+                    var expectedCrc = BitConverter.ToUInt32
+                        (
+                            _receiverRawPacketData
+                                .Skip(dataExceptCrcLength)
+                                .Take(sizeof(UInt32))
+                                .ToArray()
+                        );
+                    
+                    if (expectedCrc == calculatedCrc && _onPacketReceived != null)
+                    {
+                        _onPacketReceived
+                        (
+                            _receiverRawPacketData
+                                .Skip(1)
+                                .Take(_receiverExpectedPacketLength - HeaderAndCrcLength)
+                                .ToArray()
+                        );
+                    }
+                    
+                    _receiverRawPacketData.Clear();
+                    _receiverState = ReceiverState.Listen;
+                    return;
+                }
+                
+                break;
+            
+            default:
+                throw new InvalidOperationException($"Unknown receiver state { _receiverState }");
+        }
     }
 }
