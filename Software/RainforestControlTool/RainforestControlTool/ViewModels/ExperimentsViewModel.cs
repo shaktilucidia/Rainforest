@@ -84,6 +84,8 @@ public class ExperimentsViewModel : INotifyPropertyChanged
     public ICommand DisconnectCommand { get; }
 
     public ICommand DoYiffCommand { get; }
+    
+    public ICommand DoYuffCommand { get; }
 
     #endregion
     
@@ -127,6 +129,7 @@ public class ExperimentsViewModel : INotifyPropertyChanged
         ConnectCommand = new Command(async () => await OnConnectCommandAsync(), CanExecuteConnectCommand);
         DisconnectCommand = new Command(async () => await OnDisconnectCommandAsync(), CanExecuteDisconnectCommand);
         DoYiffCommand = new Command(OnDoYiffCommand);
+        DoYuffCommand = new Command(OnDoYuffCommand);
         
         #endregion
         
@@ -217,5 +220,10 @@ public class ExperimentsViewModel : INotifyPropertyChanged
     private void OnDoYiffCommand()
     {
         _stationLowLevelPacketsProcessor.SendPacket(Encoding.Default.GetBytes("Yiff! Yiff! Yiff!"));
+    }
+    
+    private void OnDoYuffCommand()
+    {
+        _stationLowLevelPacketsProcessor.SendPacket(Encoding.Default.GetBytes("Yuff! Yuff! Yuff!"));
     }
 }

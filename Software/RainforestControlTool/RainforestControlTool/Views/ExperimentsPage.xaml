@@ -90,6 +90,18 @@
                 </VerticalStackLayout>
             </Border>
             
+            <!-- Yiff -->
+            <Button
+                Style="{ StaticResource MarginatedButton }"
+                Text="Do Yiff!"
+                Command="{ Binding DoYiffCommand }" />
+            
+            <!-- Yuff -->
+            <Button
+                Style="{ StaticResource MarginatedButton }"
+                Text="Do Yuff!"
+                Command="{ Binding DoYuffCommand }" />
+            
             <!-- Console -->
             <Border
                 Style="{ StaticResource RoundedBorder }">
@@ -104,11 +116,6 @@
                 </VerticalStackLayout>
             
             </Border>
-            
-            <Button
-                Style="{ StaticResource MarginatedButton }"
-                Text="Do Yiff!"
-                Command="{ Binding DoYiffCommand }" />
             
         </VerticalStackLayout>
     </ScrollView>
