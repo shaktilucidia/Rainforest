@@ -29,5 +29,11 @@ void LLPP_StartListen(void);
  */
 void LLPP_AbortListen(void);
 
+/**
+ * Send payload in blocking mode. Payload copied to internal buffer, so even if interrupt/DMA
+ * will change payload buffer data will unaffected
+ */
+void LLPP_Send(uint8_t* payload, uint8_t payloadLength);
+
 
 #endif /* INCLUDE_PACKETS_PROCESSOR_LOW_LEVEL_PACKETS_PROCESSOR_H_ */

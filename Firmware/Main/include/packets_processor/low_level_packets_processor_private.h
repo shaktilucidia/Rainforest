@@ -74,7 +74,8 @@ uint8_t LLPP_RxByteBuffer;
 /**
  * Packet is being accumulated here
  */
-uint8_t LLPP_PacketRxBuffer[LLPP_PACKET_MAX_SIZE];
+//uint8_t LLPP_PacketRxBuffer[LLPP_PACKET_MAX_SIZE];
+uint8_t* LLPP_PacketRxBuffer;
 
 /**
  * Current byte index within LLPP_PacketRxBuffer
@@ -86,10 +87,6 @@ uint8_t LLPP_PacketRxBufferIndex;
  */
 uint16_t LLPP_PacketRxTimeoutTimer;
 
-/**
- * If true then we have packet, ready to be processed.
- */
-//bool LLPP_IsPacketReady;
 
 /**
  * When first byte of packet came, we are able to detect packet length. That length
@@ -97,15 +94,6 @@ uint16_t LLPP_PacketRxTimeoutTimer;
  */
 uint8_t LLPP_ExpectedPacketLength;
 
-/**
- * Full length of received packet
- */
-//uint8_t LLPP_ReceivedPacketFullLength;
-
-/**
- * Received packet, ready to be processed
- */
-//uint8_t LLPP_ReceivedPacket[LLPP_PACKET_MAX_SIZE];
 
 /**
  * Call this every millisecond
@@ -116,6 +104,11 @@ void LLPP_Tick(void);
  * Ask for next byte
  */
 void LLPP_AskForNextByte(void);
+
+/**
+ * Free packet RX buffer and set pointer no NULL
+ */
+void LLPP_FreePacketRxBuffer(void);
 
 
 #endif /* INCLUDE_PACKETS_PROCESSOR_LOW_LEVEL_PACKETS_PROCESSOR_PRIVATE_H_ */

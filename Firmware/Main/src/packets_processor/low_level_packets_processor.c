@@ -30,6 +30,9 @@ void LLPP_Tick(void)
 			{
 				/* Timeout, aborting ongoing packet reception. */
 				LLPP_State = LLPP_STATE_LISTEN;
+
+				LLPP_FreePacketRxBuffer();
+
 				LLPP_PacketRxBufferIndex = 0;
 			}
 		}
@@ -46,11 +49,16 @@ void LLPP_StartListen(void)
 
 void LLPP_AbortListen(void)
 {
-	LLPP_State = LLPP_STATE_NOT_LISTEN;
-
 	if (HAL_UART_AbortReceive(&UART1Handle) != HAL_OK)
 	{
 		L2HAL_Error(Generic);
+	}
+
+	LLPP_State = LLPP_STATE_NOT_LISTEN;
+
+	if (NULL != LLPP_PacketRxBuffer)
+	{
+		LLPP_FreePacketRxBuffer();
 	}
 }
 
@@ -78,16 +86,20 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 
 			/* First byte came */
 			LLPP_PacketRxTimeoutTimer = LLPP_PACKET_NEXT_BYTE_TIMEOUT;
-			LLPP_PacketRxBufferIndex = 0;
-			LLPP_PacketRxBuffer[LLPP_PacketRxBufferIndex] = LLPP_RxByteBuffer;
+
+			LLPP_ExpectedPacketLength = LLPP_RxByteBuffer; /* Packet length is always in first byte*/
 
 			/* Checking packet length */
-			LLPP_ExpectedPacketLength = LLPP_PacketRxBuffer[LLPP_PacketRxBufferIndex]; /* Packet length is always in first byte*/
 			if (LLPP_ExpectedPacketLength < LLPP_PACKET_MIN_SIZE || LLPP_ExpectedPacketLength > LLPP_PACKET_MAX_SIZE)
 			{
 				LLPP_AskForNextByte();
 				return; /* Invalid packet */
 			}
+
+			LLPP_PacketRxBufferIndex = 0;
+			LLPP_PacketRxBuffer = malloc(LLPP_ExpectedPacketLength);
+			LLPP_PacketRxBuffer[LLPP_PacketRxBufferIndex] = LLPP_RxByteBuffer;
+
 
 			/* Moving to next state*/
 			LLPP_PacketRxBufferIndex ++;
@@ -114,8 +126,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 				{
 					/* Wrong CRC, dropping packet */
 					LLPP_State = LLPP_STATE_LISTEN;
+
+					LLPP_FreePacketRxBuffer();
 					LLPP_PacketRxBufferIndex = 0;
-					LLPP_PacketRxTimeoutTimer = LLPP_PACKET_NEXT_BYTE_TIMEOUT;
 
 					LLPP_AskForNextByte();
 
@@ -129,13 +142,12 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 
 				memcpy(payload, (uint8_t*)&LLPP_PacketRxBuffer[1], payloadLength);
 
+				LLPP_FreePacketRxBuffer();
+				LLPP_PacketRxBufferIndex = 0;
+
 				LLPP_OnPacketReceivedPtr(payload, payloadLength);
 
 				free(payload);
-
-				//LLPP_ReceivedPacketFullLength = LLPP_ExpectedPacketLength;
-				//memcpy(LLPP_ReceivedPacket, LLPP_PacketRxBuffer, LLPP_ReceivedPacketFullLength);
-				//LLPP_IsPacketReady = true;
 			}
 
 			LLPP_AskForNextByte();
@@ -146,4 +158,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 			L2HAL_Error(Generic);
 			break;
 	}
+}
+
+void LLPP_FreePacketRxBuffer(void)
+{
+	free(LLPP_PacketRxBuffer);
+	LLPP_PacketRxBuffer = NULL;
 }
