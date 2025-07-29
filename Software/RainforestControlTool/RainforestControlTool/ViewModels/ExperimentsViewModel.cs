@@ -213,6 +213,7 @@ public class ExperimentsViewModel : INotifyPropertyChanged
     {
         _mainModel.ConnectionState = ConnectionState.Disconnected;
         _mainModel.ConnectedStation = null;
+        _stationLowLevelPacketsProcessor.StopListening();
         
         ((Command)RefreshDevicesListCommand).ChangeCanExecute();
         ((Command)ConnectCommand).ChangeCanExecute();

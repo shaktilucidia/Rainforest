@@ -24,4 +24,9 @@ public interface IStationLowLevelPacketsProcessor
     /// Call this when new data came from source (like Bluetooth)
     /// </summary>
     void OnDataReceived(byte[] data);
+
+    /// <summary>
+    /// Stop listening (use it to stop internal timers and so on)
+    /// </summary>
+    void StopListening();
 }

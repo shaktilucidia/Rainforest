@@ -1,6 +1,8 @@
 using System.Text;
+using System.Timers;
 using RainforestControlTool.Independent.Abstract.Services;
 using RainforestControlTool.Independent.Helpers;
+using Timer = System.Timers.Timer;
 
 namespace RainforestControlTool.Independent.Implementations.Services;
 
@@ -20,8 +22,20 @@ public class StationLowLevelPacketsProcessor : IStationLowLevelPacketsProcessor
     /// </summary>
     private const int HeaderAndCrcLength = 5;
 
+    /// <summary>
+    /// Minimal payload length
+    /// </summary>
     private const int MinPayloadLength = 1;
+    
+    /// <summary>
+    /// Maximal payload length
+    /// </summary>
     private const int MaxPayloadLength = 250;
+    
+    /// <summary>
+    /// If  the next byte doesn't come in this number of milliseconds we will reset the state machine to the listening state 
+    /// </summary>
+    private const int NextByteTimeout = 1000;
     
     private readonly IBluetoothCommunicator _bluetoothCommunicator;
 
@@ -32,6 +46,10 @@ public class StationLowLevelPacketsProcessor : IStationLowLevelPacketsProcessor
     private int _receiverExpectedPacketLength = 0;
     
     private readonly List<byte> _receiverRawPacketData = new List<byte>();
+    
+    private readonly Timer _nextByteTimeoutTimer = new Timer(NextByteTimeout);
+    
+    private readonly Lock _nextByteProcessingLock = new Lock();
 
     public StationLowLevelPacketsProcessor
     (
@@ -89,6 +107,10 @@ public class StationLowLevelPacketsProcessor : IStationLowLevelPacketsProcessor
         
         _receiverState = ReceiverState.Listen;
         _receiverRawPacketData.Clear();
+        
+        _nextByteTimeoutTimer.AutoReset = true;
+        _nextByteTimeoutTimer.Elapsed += NextByteTimeoutTimerOnElapsed;
+        _nextByteTimeoutTimer.Enabled = true;
     }
 
     public void OnDataReceived(byte[] data)
@@ -98,72 +120,93 @@ public class StationLowLevelPacketsProcessor : IStationLowLevelPacketsProcessor
             OnNextByteReceived(b);
         }
     }
-
+    
+    private void NextByteTimeoutTimerOnElapsed(object? sender, ElapsedEventArgs e)
+    {
+        lock (_nextByteProcessingLock)
+        {
+            _receiverRawPacketData.Clear();
+            _receiverState = ReceiverState.Listen;
+        }
+    }
+    
     private void OnNextByteReceived(byte data)
     {
-        switch (_receiverState)
+        lock (_nextByteProcessingLock)
         {
-            case ReceiverState.Listen:
-                _receiverExpectedPacketLength = data;
-
-                if
-                (
-                    _receiverExpectedPacketLength < MinPayloadLength + HeaderAndCrcLength
-                    ||
-                    _receiverExpectedPacketLength > MaxPayloadLength + HeaderAndCrcLength
-                )
-                {
-                    // Invalid packet
-                    return;
-                }
-                
-                _receiverRawPacketData.Add(data);
-                _receiverState = ReceiverState.InProgress;
-                break;
+            // Resetting the next byte timer
+            _nextByteTimeoutTimer.Stop();
+            _nextByteTimeoutTimer.Start();
             
-            case ReceiverState.InProgress:
-                _receiverRawPacketData.Add(data);
+            switch (_receiverState)
+            {
+                case ReceiverState.Listen:
+                    _receiverExpectedPacketLength = data;
 
-                if (_receiverRawPacketData.Count == _receiverExpectedPacketLength)
-                {
-                    // We have new packet, checking CRC
-                    var dataExceptCrcLength = _receiverExpectedPacketLength - sizeof(UInt32);
-                    var calculatedCrc = STM32CrcGenerator
-                        .CalculateStmCrc32
-                        (
-                            _receiverRawPacketData
-                            .Take(dataExceptCrcLength)
-                            .ToArray()
-                        );
-                    
-                    var expectedCrc = BitConverter.ToUInt32
-                        (
-                            _receiverRawPacketData
-                                .Skip(dataExceptCrcLength)
-                                .Take(sizeof(UInt32))
-                                .ToArray()
-                        );
-                    
-                    if (expectedCrc == calculatedCrc && _onPacketReceived != null)
+                    if
+                    (
+                        _receiverExpectedPacketLength < MinPayloadLength + HeaderAndCrcLength
+                        ||
+                        _receiverExpectedPacketLength > MaxPayloadLength + HeaderAndCrcLength
+                    )
                     {
-                        _onPacketReceived
-                        (
-                            _receiverRawPacketData
-                                .Skip(1)
-                                .Take(_receiverExpectedPacketLength - HeaderAndCrcLength)
-                                .ToArray()
-                        );
+                        // Invalid packet
+                        return;
                     }
                     
-                    _receiverRawPacketData.Clear();
-                    _receiverState = ReceiverState.Listen;
-                    return;
-                }
+                    _receiverRawPacketData.Add(data);
+                    _receiverState = ReceiverState.InProgress;
+                    break;
                 
-                break;
-            
-            default:
-                throw new InvalidOperationException($"Unknown receiver state { _receiverState }");
+                case ReceiverState.InProgress:
+                    _receiverRawPacketData.Add(data);
+
+                    if (_receiverRawPacketData.Count == _receiverExpectedPacketLength)
+                    {
+                        // We have new packet, checking CRC
+                        var dataExceptCrcLength = _receiverExpectedPacketLength - sizeof(UInt32);
+                        var calculatedCrc = STM32CrcGenerator
+                            .CalculateStmCrc32
+                            (
+                                _receiverRawPacketData
+                                .Take(dataExceptCrcLength)
+                                .ToArray()
+                            );
+                        
+                        var expectedCrc = BitConverter.ToUInt32
+                            (
+                                _receiverRawPacketData
+                                    .Skip(dataExceptCrcLength)
+                                    .Take(sizeof(UInt32))
+                                    .ToArray()
+                            );
+                        
+                        if (expectedCrc == calculatedCrc && _onPacketReceived != null)
+                        {
+                            _onPacketReceived
+                            (
+                                _receiverRawPacketData
+                                    .Skip(1)
+                                    .Take(_receiverExpectedPacketLength - HeaderAndCrcLength)
+                                    .ToArray()
+                            );
+                        }
+                        
+                        _receiverRawPacketData.Clear();
+                        _receiverState = ReceiverState.Listen;
+                        return;
+                    }
+                    
+                    break;
+                
+                default:
+                    throw new InvalidOperationException($"Unknown receiver state { _receiverState }");
+            }   
         }
+    }
+    
+    public void StopListening()
+    {
+        _nextByteTimeoutTimer.Stop();
     }
 }

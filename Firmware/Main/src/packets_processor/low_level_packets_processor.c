@@ -114,6 +114,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 
 		case LLPP_STATE_IN_PROGRESS:
 			LLPP_PacketRxTimeoutTimer = LLPP_PACKET_NEXT_BYTE_TIMEOUT;
+
 			LLPP_PacketRxBuffer[LLPP_PacketRxBufferIndex] = LLPP_RxByteBuffer;
 			LLPP_PacketRxBufferIndex ++;
 

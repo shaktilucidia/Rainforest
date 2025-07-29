@@ -82,6 +82,11 @@ public class BluetoothCommunicator : IBluetoothCommunicator
 
     public void Disconnect()
     {
+        if (_readerThread != null)
+        {
+            _readerThread.Interrupt();
+        }
+        
         if (_socket != null && _socket.IsConnected)
         {
             _socket.Close();
@@ -106,7 +111,7 @@ public class BluetoothCommunicator : IBluetoothCommunicator
             }
             catch
             {
-                // Exceptions occur when socket is getting closed on disconnect
+                // Exceptions occur when the socket is getting closed on disconnect
                 Disconnect();
                 return;
             }
