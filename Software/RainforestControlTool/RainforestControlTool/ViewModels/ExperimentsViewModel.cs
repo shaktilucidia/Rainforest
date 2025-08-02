@@ -4,6 +4,7 @@ using System.Text;
 using System.Windows.Input;
 using RainforestControlTool.Independent.Abstract.Services;
 using RainforestControlTool.Independent.Models;
+using RainforestControlTool.Independent.Models.Bluetooth;
 using RainforestControlTool.Models;
 
 namespace RainforestControlTool.ViewModels;
@@ -16,6 +17,7 @@ public class ExperimentsViewModel : INotifyPropertyChanged
     private readonly IPairedBluetoothDevicesEnumerator _devicesEnumerator;
     private readonly IBluetoothCommunicator _bluetoothCommunicator;
     private readonly IStationLowLevelPacketsProcessor _stationLowLevelPacketsProcessor;
+    private readonly IProtocolProcessor _protocolProcessor;
 
     public event PropertyChangedEventHandler? PropertyChanged;
     
@@ -83,9 +85,7 @@ public class ExperimentsViewModel : INotifyPropertyChanged
     
     public ICommand DisconnectCommand { get; }
 
-    public ICommand DoYiffCommand { get; }
-    
-    public ICommand DoYuffCommand { get; }
+    public ICommand SetDateTimeCommand { get; }
 
     #endregion
     
@@ -120,6 +120,7 @@ public class ExperimentsViewModel : INotifyPropertyChanged
         _devicesEnumerator = App.ServiceProvider.GetService<IPairedBluetoothDevicesEnumerator>() ?? throw new InvalidOperationException("No bluetooth devices enumerator found!");
         _bluetoothCommunicator = App.ServiceProvider.GetService<IBluetoothCommunicator>() ?? throw new InvalidOperationException("No bluetooth communicator found!");
         _stationLowLevelPacketsProcessor = App.ServiceProvider.GetService<IStationLowLevelPacketsProcessor>() ?? throw new InvalidOperationException("No station low-level packets processor found!");
+        _protocolProcessor = App.ServiceProvider.GetService<IProtocolProcessor>() ?? throw new InvalidOperationException("No protocol processor found!");
         
         #endregion
         
@@ -128,8 +129,7 @@ public class ExperimentsViewModel : INotifyPropertyChanged
         RefreshDevicesListCommand = new Command(async () => await OnRefreshDevicesListCommandAsync(), CanExecuteRefreshDevicesListCommand);
         ConnectCommand = new Command(async () => await OnConnectCommandAsync(), CanExecuteConnectCommand);
         DisconnectCommand = new Command(async () => await OnDisconnectCommandAsync(), CanExecuteDisconnectCommand);
-        DoYiffCommand = new Command(OnDoYiffCommand);
-        DoYuffCommand = new Command(OnDoYuffCommand);
+        SetDateTimeCommand = new Command(OnSetDateTimeCommand);
         
         #endregion
         
@@ -220,13 +220,8 @@ public class ExperimentsViewModel : INotifyPropertyChanged
         ((Command)DisconnectCommand).ChangeCanExecute();
     }
 
-    private void OnDoYiffCommand()
+    private void OnSetDateTimeCommand()
     {
-        _stationLowLevelPacketsProcessor.SendPacket(Encoding.Default.GetBytes("Yiff! Yiff! Yiff!"));
-    }
-    
-    private void OnDoYuffCommand()
-    {
-        _stationLowLevelPacketsProcessor.SendPacket(Encoding.Default.GetBytes("Yuff! Yuff! Yuff!"));
+        _protocolProcessor.SetDateTime(DateTime.UtcNow, null);
     }
 }

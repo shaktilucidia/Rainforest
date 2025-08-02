@@ -1,4 +1,4 @@
-namespace RainforestControlTool.Independent.Models;
+namespace RainforestControlTool.Independent.Models.Bluetooth;
 
 /// <summary>
 /// Paired bluetooth device

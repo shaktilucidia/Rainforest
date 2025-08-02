@@ -25,6 +25,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IPairedBluetoothDevicesEnumerator, PairedBluetoothDevicesEnumerator>();
         builder.Services.AddSingleton<IBluetoothCommunicator, BluetoothCommunicator>();
         builder.Services.AddSingleton<IStationLowLevelPacketsProcessor, StationLowLevelPacketsProcessor>();
+        builder.Services.AddSingleton<IProtocolProcessor, ProtocolProcessor>();
         
         #endregion
 

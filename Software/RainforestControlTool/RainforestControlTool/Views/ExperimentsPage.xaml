@@ -90,17 +90,11 @@
                 </VerticalStackLayout>
             </Border>
             
-            <!-- Yiff -->
+            <!-- Set date and time -->
             <Button
                 Style="{ StaticResource MarginatedButton }"
-                Text="Do Yiff!"
-                Command="{ Binding DoYiffCommand }" />
-            
-            <!-- Yuff -->
-            <Button
-                Style="{ StaticResource MarginatedButton }"
-                Text="Do Yuff!"
-                Command="{ Binding DoYuffCommand }" />
+                Text="Set date and time"
+                Command="{ Binding SetDateTimeCommand }" />
             
             <!-- Console -->
             <Border

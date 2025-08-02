@@ -1,6 +1,7 @@
 using Android.Bluetooth;
 using RainforestControlTool.Independent.Abstract.Services;
 using RainforestControlTool.Independent.Models;
+using RainforestControlTool.Independent.Models.Bluetooth;
 
 namespace RainforestControlTool.Implementations.Services;
 
