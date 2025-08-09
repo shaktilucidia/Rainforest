@@ -44,7 +44,8 @@
 
 /* Colors */
 FMGL_API_ColorStruct OffColor = { .R = FMGL_API_MAX_CHANNEL_BRIGHTNESS, .G = FMGL_API_MAX_CHANNEL_BRIGHTNESS, .B = FMGL_API_MAX_CHANNEL_BRIGHTNESS };
-FMGL_API_ColorStruct OnColor = { .R = 0x00, .G = 0x00, .B = 0x00 };
+FMGL_API_ColorStruct OrdinaryColor = { .R = 0x00, .G = 0x00, .B = 0x00 };
+FMGL_API_ColorStruct ImportantColor = { .R = 0xFF, .G = 0x00, .B = 0x00 };
 
 int main(int argc, char* argv[])
 {
@@ -85,6 +86,8 @@ int main(int argc, char* argv[])
 
 		OffColor,
 
+		true, /* Is 3-color display? */
+
 		CONSTANTS_GENERIC_IS_DO_PERIODIC_FULL_REFRESH, /* Do periodic full refresh? */
 		CONSTANTS_GENERIC_PERIODIC_FULL_REFRESH_PERIOD /* Do periodic full refresh each this frames count */
 	);
@@ -112,6 +115,12 @@ int main(int argc, char* argv[])
 		(void (*)(void *, FMGL_API_ColorStruct))&L2HAL_SSD1683_ClearFramebuffer /* Blanking method */
 	);
 
+	FMGL_API_DrawRectangleFilled(&FmglContext, 10, 10, 390, 60, OrdinaryColor, OrdinaryColor);
+	FMGL_API_DrawRectangleFilled(&FmglContext, 10, 60, 390, 110, ImportantColor, ImportantColor);
+	FMGL_API_DrawRectangleFilled(&FmglContext, 10, 110, 390, 160, OffColor, OffColor);
+	FMGL_API_DrawRectangleFilled(&FmglContext, 10, 160, 390, 210, ImportantColor, ImportantColor);
+	FMGL_API_DrawRectangleFilled(&FmglContext, 10, 210, 390, 260, OrdinaryColor, OrdinaryColor);
+
 	/* Early monospaced font */
 	FMGL_API_Font earlyFontData = FMGL_FontTerminusRegular12Init();
 	FMGL_API_XBMTransparencyMode transparencyMode = FMGL_XBMTransparencyModeNormal;
@@ -120,9 +129,27 @@ int main(int argc, char* argv[])
 	EarlyFont.Scale = 1;
 	EarlyFont.CharactersSpacing = 0;
 	EarlyFont.LinesSpacing = 0;
-	EarlyFont.FontColor = &OnColor;
+	EarlyFont.FontColor = &OrdinaryColor;
 	EarlyFont.BackgroundColor = &OffColor;
 	EarlyFont.Transparency = &transparencyMode;
+
+	uint16_t width, height;
+	FMGL_API_RenderTextWithLineBreaks
+	(
+		&FmglContext,
+		&EarlyFont,
+		10,
+		270,
+		&width,
+		&height,
+		false,
+		"\xF3\xD4\xD2\xC1\xCE\xCE\xD9\xC5 \xD0\xCF\xCC\xCF\xD3\xCB\xC9 }="
+	);
+
+	FMGL_API_PushFramebuffer(&FmglContext);
+
+	// TODO: Remove me
+	while (true) {}
 
 	/* Console init */
 	Console = FMGL_ConsoleInit(&FmglContext, &EarlyFont);
@@ -191,7 +218,7 @@ int main(int argc, char* argv[])
 	MainFont.Scale = 1;
 	MainFont.CharactersSpacing = 0;
 	MainFont.LinesSpacing = 0;
-	MainFont.FontColor = &OnColor;
+	MainFont.FontColor = &OrdinaryColor;
 	MainFont.BackgroundColor = &OffColor;
 	MainFont.Transparency = &transparencyMode;
 
@@ -215,28 +242,51 @@ int main(int argc, char* argv[])
 	L2HAL_SysTick_RegisterHandler(&OnSysTick);
 
 	/* Clear screen before going to main mode */
-	/*FMGL_API_ClearScreen(&FmglContext);
-	FMGL_API_PushFramebuffer(&FmglContext);*/
+	FMGL_API_ClearScreen(&FmglContext);
+	FMGL_API_PushFramebuffer(&FmglContext);
 
 	/* Starting to listen for packets */
 	LLPP_Init(OnPacketReceived);
 	LLPP_StartListen();
 
 	/* Main loop enter */
-	while (true)
+/*	while (true)
 	{
 		if (IsNewPacketReceived)
 		{
 			IsNewPacketReceived = false;
 
-			uint8_t buffer[256];
-			sprintf(buffer, "Acknowledged: %s", PacketPayload);
+			char buffer[64];
 
-			LLPP_Send(buffer, strlen(buffer));
+			FMGL_ConsoleAddLine(&Console, "New packet received:");
 
-			FMGL_ConsoleAddLine(&Console, PacketPayload);
+			uint32_t sequenceId;
+			memcpy(&sequenceId, &PacketPayload[0], 4);
+
+			uint8_t payloadType = PacketPayload[4];
+			sprintf(buffer, "SeqID: %d, Type: %d", sequenceId, payloadType);
+			FMGL_ConsoleAddLine(&Console, buffer);
+
+			uint16_t command;
+			memcpy(&command, &PacketPayload[5], 2);
+			sprintf(buffer, "Command: %d", command);
+			FMGL_ConsoleAddLine(&Console, buffer);
+
+			int16_t timezone;
+			memcpy(&command, &PacketPayload[7], 2);
+
+			uint8_t year = PacketPayload[9];
+			uint8_t month = PacketPayload[10];
+			uint8_t dayOfMonth = PacketPayload[11];
+			uint8_t dayOfWeek = PacketPayload[12];
+			uint8_t hour = PacketPayload[13];
+			uint8_t minute = PacketPayload[14];
+			uint8_t second = PacketPayload[15];
+
+			sprintf(buffer, "20%02d-%02d-%02d (%d) %02d:%02d:%02d+%d", year, month, dayOfMonth, dayOfWeek, hour, minute, second, timezone);
+			FMGL_ConsoleAddLine(&Console, buffer);
 		}
-	}
+	}*/
 
 	/*while(true)
 	{

@@ -41,6 +41,14 @@ FMGL_API_ColorStruct BlackColor =
 	.B = 0
 };
 
+/* Predefined red color */
+FMGL_API_ColorStruct RedColor =
+{
+	.R = FMGL_API_MAX_CHANNEL_BRIGHTNESS,
+	.G = 0,
+	.B = 0
+};
+
 /**
  * Send reset signal to display
  */
@@ -107,14 +115,29 @@ void L2HAL_SSD1683_Update(L2HAL_SSD1683_ContextStruct *context);
 void L2HAL_SSD1683_PartialUpdate(L2HAL_SSD1683_ContextStruct *context);
 
 /**
- * If color is not fully black will return 0xFF, otherwise 0x00
+ * Put this value into black framebuffer
  */
-uint8_t L2HAL_SSD1683_BinarizeColor(FMGL_API_ColorStruct color);
+uint8_t L2HAL_SSD1683_GetBlackColorPattern(FMGL_API_ColorStruct color);
 
 /**
-* Push framebuffer with given command (internal use only)
-*/
-void L2HAL_SSD1683_PushFramebufferInternal(L2HAL_SSD1683_ContextStruct* context, uint8_t command);
+ * Put this value into red framebuffer
+ */
+uint8_t L2HAL_SSD1683_GetRedColorPattern(FMGL_API_ColorStruct color);
+
+/**
+ * Push all necessary framebuffers to device
+ */
+void L2HAL_SSD1683_PushFramebuffersInternal(L2HAL_SSD1683_ContextStruct* context);
+
+/**
+ * Push red framebuffer
+ */
+void L2HAL_SSD1683_PushFramebufferInternalR(L2HAL_SSD1683_ContextStruct* context);
+
+/**
+ * Push B/W framebuffer
+ */
+void L2HAL_SSD1683_PushFramebufferInternalB(L2HAL_SSD1683_ContextStruct* context);
 
 /**
  * Power display on

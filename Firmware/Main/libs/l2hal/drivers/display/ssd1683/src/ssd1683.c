@@ -7,6 +7,7 @@
 
 #include "../include/ssd1683.h"
 #include "../include/ssd1683_private.h"
+#include <stdlib.h>
 
 void L2HAL_SSD1683_Init
 (
@@ -26,6 +27,8 @@ void L2HAL_SSD1683_Init
 	uint16_t chipSelectPin,
 
 	FMGL_API_ColorStruct initColor,
+
+	bool isThreeColor,
 
 	bool isAutoFullRefresh,
 
@@ -47,6 +50,18 @@ void L2HAL_SSD1683_Init
 	context->ChipSelectPin = chipSelectPin;
 
 	context->IsDataTransferInProgress = true;
+
+	/* Color mode */
+	context->IsThreeColor = isThreeColor;
+
+	if (context->IsThreeColor)
+	{
+		context->FramebufferR = malloc(L2HAL_SSD1683_FRAMEBUFFER_SIZE);
+	}
+	else
+	{
+		context->FramebufferR = NULL;
+	}
 
 	/* Auto full refresh */
 	context->IsAutoFullRefresh = isAutoFullRefresh;
@@ -156,9 +171,6 @@ void L2HAL_SSD1683_WriteCommand(L2HAL_SSD1683_ContextStruct *context, uint8_t co
 	L2HAL_SSD1683_SelectChip(context, false);
 }
 
-/**
- * Write data to display
- */
 void L2HAL_SSD1683_WriteData(L2HAL_SSD1683_ContextStruct *context, uint8_t *data, uint16_t dataSize)
 {
 	context->IsDataTransferInProgress = true;
@@ -177,17 +189,11 @@ void L2HAL_SSD1683_WriteData(L2HAL_SSD1683_ContextStruct *context, uint8_t *data
 	L2HAL_SSD1683_SelectChip(context, false);
 }
 
-/**
- * Write 1 byte of data
- */
 void L2HAL_SSD1683_WriteDataByte(L2HAL_SSD1683_ContextStruct *context, uint8_t data)
 {
 	L2HAL_SSD1683_WriteData(context, &data, 1);
 }
 
-/**
- * Set output position
- */
 void L2HAL_SSD1683_SetPosition(L2HAL_SSD1683_ContextStruct *context, uint16_t x, uint16_t y)
 {
 	L2HAL_SSD1683_WriteCommand(context, 0x4E);
@@ -231,49 +237,53 @@ void L2HAL_SSD1683_Update(L2HAL_SSD1683_ContextStruct *context)
 	L2HAL_SSD1683_WaitForReadiness(context);
 }
 
-/**
- * Update display partially (not spatial, but "weak update")
- */
 void L2HAL_SSD1683_PartialUpdate(L2HAL_SSD1683_ContextStruct *context)
 {
 	L2HAL_SSD1683_WriteCommand(context, 0x22);
-	L2HAL_SSD1683_WriteDataByte(context, 0xFF);
+	L2HAL_SSD1683_WriteDataByte(context, 0xC7);
 
 	L2HAL_SSD1683_WriteCommand(context, 0x20);
 
 	L2HAL_SSD1683_WaitForReadiness(context);
 }
 
-/**
- * Get display width
- */
 uint16_t L2HAL_SSD1683_GetWidth(void)
 {
 	return L2HAL_SSD1683_DISPLAY_WIDTH;
 }
 
-/**
- * Get display height
- */
 uint16_t L2HAL_SSD1683_GetHeight(void)
 {
 	return L2HAL_SSD1683_DISPLAY_HEIGHT;
 }
 
-/**
- * Set color what will be used for drawing.
- */
 void L2HAL_SSD1683_SetActiveColor(L2HAL_SSD1683_ContextStruct* context, FMGL_API_ColorStruct color)
 {
-	context->BinarizedActiveColor = L2HAL_SSD1683_BinarizeColor(color);
+	context->PatternB = L2HAL_SSD1683_GetBlackColorPattern(color);
+	context->PatternR = L2HAL_SSD1683_GetRedColorPattern(color);
 }
 
-/**
- * If color is not fully black will return true
- */
-uint8_t L2HAL_SSD1683_BinarizeColor(FMGL_API_ColorStruct color)
+uint8_t L2HAL_SSD1683_GetBlackColorPattern(FMGL_API_ColorStruct color)
 {
-	return (0x00 != (color.R | color.G | color.B)) ? 0xFF : 0x00;
+	return (0x00 == color.R && 0x00 == color.G && 0x00 == color.B) ? 0x00 : 0xFF;
+}
+
+uint8_t L2HAL_SSD1683_GetRedColorPattern(FMGL_API_ColorStruct color)
+{
+	return
+	(
+		0x00 != color.R
+		&&
+		!(
+			FMGL_API_MAX_CHANNEL_BRIGHTNESS == color.R
+			&&
+			FMGL_API_MAX_CHANNEL_BRIGHTNESS == color.G
+			&&
+			FMGL_API_MAX_CHANNEL_BRIGHTNESS == color.B
+		)
+	)
+	? 0xFF
+	: 0x00;
 }
 
 /**
@@ -281,7 +291,12 @@ uint8_t L2HAL_SSD1683_BinarizeColor(FMGL_API_ColorStruct color)
  */
 void L2HAL_SSD1683_ClearFramebuffer(L2HAL_SSD1683_ContextStruct* context, FMGL_API_ColorStruct clearColor)
 {
-	memset(context->Framebuffer, L2HAL_SSD1683_BinarizeColor(clearColor), L2HAL_SSD1683_FRAMEBUFFER_SIZE);
+	memset(context->FramebufferB, L2HAL_SSD1683_GetBlackColorPattern(clearColor), L2HAL_SSD1683_FRAMEBUFFER_SIZE);
+
+	if (context->IsThreeColor)
+	{
+		memset(context->FramebufferR, L2HAL_SSD1683_GetRedColorPattern(clearColor), L2HAL_SSD1683_FRAMEBUFFER_SIZE);
+	}
 }
 
 /**
@@ -289,9 +304,7 @@ void L2HAL_SSD1683_ClearFramebuffer(L2HAL_SSD1683_ContextStruct* context, FMGL_A
  */
 void L2HAL_SSD1683_PushFramebufferFull(L2HAL_SSD1683_ContextStruct* context)
 {
-	L2HAL_SSD1683_PushFramebufferInternal(context, 0x26);
-	L2HAL_SSD1683_PushFramebufferInternal(context, 0x24);
-
+	L2HAL_SSD1683_PushFramebuffersInternal(context);
 	L2HAL_SSD1683_Update(context);
 }
 
@@ -306,7 +319,7 @@ void L2HAL_SSD1683_PushFramebufferPartial(L2HAL_SSD1683_ContextStruct* context)
 		{
 			context->FramesTillFullRefresh --;
 
-			L2HAL_SSD1683_PushFramebufferInternal(context, 0x24);
+			L2HAL_SSD1683_PushFramebuffersInternal(context);
 			L2HAL_SSD1683_PartialUpdate(context);
 		}
 		else
@@ -318,19 +331,39 @@ void L2HAL_SSD1683_PushFramebufferPartial(L2HAL_SSD1683_ContextStruct* context)
 	}
 	else
 	{
-		L2HAL_SSD1683_PushFramebufferInternal(context, 0x24);
+		L2HAL_SSD1683_PushFramebuffersInternal(context);
 		L2HAL_SSD1683_PartialUpdate(context);
 	}
 }
 
-/**
-* Push framebuffer with given command (internal use only)
-*/
-void L2HAL_SSD1683_PushFramebufferInternal(L2HAL_SSD1683_ContextStruct* context, uint8_t command)
+void L2HAL_SSD1683_PushFramebuffersInternal(L2HAL_SSD1683_ContextStruct* context)
+{
+	L2HAL_SSD1683_PushFramebufferInternalB(context);
+
+	if (context->IsThreeColor)
+	{
+		L2HAL_SSD1683_PushFramebufferInternalR(context);
+	}
+}
+
+void L2HAL_SSD1683_PushFramebufferInternalR(L2HAL_SSD1683_ContextStruct* context)
+{
+	if (!context->IsThreeColor)
+	{
+		/* Attempt to push red buffer in 2-color mode */
+		L2HAL_Error(Generic);
+	}
+
+	L2HAL_SSD1683_SetRange(context, 0, 0, L2HAL_SSD1683_DISPLAY_WIDTH, L2HAL_SSD1683_DISPLAY_HEIGHT);
+	L2HAL_SSD1683_WriteCommand(context, 0x26);
+	L2HAL_SSD1683_WriteData(context, context->FramebufferR, L2HAL_SSD1683_FRAMEBUFFER_SIZE);
+}
+
+void L2HAL_SSD1683_PushFramebufferInternalB(L2HAL_SSD1683_ContextStruct* context)
 {
 	L2HAL_SSD1683_SetRange(context, 0, 0, L2HAL_SSD1683_DISPLAY_WIDTH, L2HAL_SSD1683_DISPLAY_HEIGHT);
-	L2HAL_SSD1683_WriteCommand(context, command);
-	L2HAL_SSD1683_WriteData(context, context->Framebuffer, L2HAL_SSD1683_DISPLAY_LINE_SIZE * L2HAL_SSD1683_DISPLAY_HEIGHT);
+	L2HAL_SSD1683_WriteCommand(context, 0x24);
+	L2HAL_SSD1683_WriteData(context, context->FramebufferB, L2HAL_SSD1683_FRAMEBUFFER_SIZE);
 }
 
 /**
@@ -345,7 +378,12 @@ void L2HAL_SSD1683_DrawPixel(L2HAL_SSD1683_ContextStruct* context, uint16_t x, u
 	uint8_t mask = (1 << bitNumber);
 	uint8_t antimask = ~(1 << bitNumber);
 
-	context->Framebuffer[index] = (context->Framebuffer[index] & antimask) | (mask & context->BinarizedActiveColor);
+	context->FramebufferB[index] = (context->FramebufferB[index] & antimask) | (mask & context->PatternB);
+
+	if (context->IsThreeColor)
+	{
+		context->FramebufferR[index] = (context->FramebufferR[index] & antimask) | (mask & context->PatternR);
+	}
 }
 
 /**
@@ -357,36 +395,53 @@ FMGL_API_ColorStruct L2HAL_SSD1683_GetPixel(L2HAL_SSD1683_ContextStruct* context
 
 	uint8_t bitNumber = x % 8;
 
-	return (0 != (context->Framebuffer[index] & (1 << bitNumber))) ? WhiteColor : BlackColor;
-
+	if (!context->IsThreeColor)
+	{
+		return (0x00 != (context->FramebufferB[index] & (1 << bitNumber))) ? WhiteColor : BlackColor;
+	}
+	else
+	{
+		if (0x00 != (context->FramebufferR[index] & (1 << bitNumber)))
+		{
+			return RedColor;
+		}
+		else
+		{
+			return (0x00 != (context->FramebufferB[index] & (1 << bitNumber))) ? WhiteColor : BlackColor;
+		}
+	}
 }
 
-/**
- * Save framebuffer to external memory
- */
-void L2HAL_SSD1683_SaveFramebuffer
+void L2HAL_SSD1683_SaveFramebuffers
 (
 	L2HAL_SSD1683_ContextStruct * context,
 	void* RAMContext,
 	uint32_t saveAddress,
-	void (*FramebufferMemoryWriteFunctionPtr)(void*, uint32_t, uint32_t, uint8_t*)
+	void (*FramebuffersMemoryWriteFunctionPtr)(void*, uint32_t, uint32_t, uint8_t*)
 )
 {
-	FramebufferMemoryWriteFunctionPtr(RAMContext, saveAddress, L2HAL_SSD1683_FRAMEBUFFER_SIZE, context->Framebuffer);
+	FramebuffersMemoryWriteFunctionPtr(RAMContext, saveAddress, L2HAL_SSD1683_FRAMEBUFFER_SIZE, context->FramebufferB);
+
+	if (context->IsThreeColor)
+	{
+		FramebuffersMemoryWriteFunctionPtr(RAMContext, saveAddress + L2HAL_SSD1683_FRAMEBUFFER_SIZE, L2HAL_SSD1683_FRAMEBUFFER_SIZE, context->FramebufferR);
+	}
 }
 
-/**
- * Load framebuffer from external memory
- */
-void L2HAL_SSD1683_LoadFramebuffer
+void L2HAL_SSD1683_LoadFramebuffers
 (
 	L2HAL_SSD1683_ContextStruct *context,
 	void* RAMContext,
 	uint32_t loadAddress,
-	void (*FramebufferMemoryReadFunctionPtr)(void*, uint32_t, uint32_t, uint8_t*)
+	void (*FramebuffersMemoryReadFunctionPtr)(void*, uint32_t, uint32_t, uint8_t*)
 )
 {
-	FramebufferMemoryReadFunctionPtr(RAMContext, loadAddress, L2HAL_SSD1683_FRAMEBUFFER_SIZE, context->Framebuffer);
+	FramebuffersMemoryReadFunctionPtr(RAMContext, loadAddress, L2HAL_SSD1683_FRAMEBUFFER_SIZE, context->FramebufferB);
+
+	if (context->IsThreeColor)
+	{
+		FramebuffersMemoryReadFunctionPtr(RAMContext, loadAddress + L2HAL_SSD1683_FRAMEBUFFER_SIZE, L2HAL_SSD1683_FRAMEBUFFER_SIZE, context->FramebufferR);
+	}
 }
 
 /**

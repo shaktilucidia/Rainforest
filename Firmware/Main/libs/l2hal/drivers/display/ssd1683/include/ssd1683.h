@@ -56,9 +56,14 @@ typedef struct
 	uint16_t ChipSelectPin;
 
 	/**
-	 * Current drawing color. 0x00 - black, 0xFF - white
+	 * Current pattern for black framebuffer
 	 */
-	uint8_t BinarizedActiveColor;
+	uint8_t PatternB;
+
+	/**
+	 * Current pattern for red framebuffer
+	 */
+	uint8_t PatternR;
 
 	/**
 	 * If true, then data transfer in progress and we must wait for next one
@@ -66,9 +71,19 @@ typedef struct
 	volatile bool IsDataTransferInProgress;
 
 	/**
-	 * Local framebuffer
+	 * Black framebuffer (it always allocated)
 	 */
-	uint8_t Framebuffer[L2HAL_SSD1683_FRAMEBUFFER_SIZE];
+	uint8_t FramebufferB[L2HAL_SSD1683_FRAMEBUFFER_SIZE];
+
+	/**
+	 * Red framebuffer (allocated only in 3-color mode)
+	 */
+	uint8_t* FramebufferR;
+
+	/**
+	 * If set to true, then we work with 3-color (white-red-black) display
+	 */
+	bool IsThreeColor;
 
 	/**
 	 * If set to true, then driver will perform full refreshs each AutoFullRefreshFramesCount
@@ -109,6 +124,8 @@ void L2HAL_SSD1683_Init
 	uint16_t chipSelectPin,
 
 	FMGL_API_ColorStruct initColor,
+
+	bool isThreeColor,
 
 	bool isAutoFullRefresh,
 
@@ -161,25 +178,25 @@ void L2HAL_SSD1683_PushFramebufferPartial(L2HAL_SSD1683_ContextStruct* context);
 void L2HAL_SSD1683_MarkDataTransferAsCompleted(L2HAL_SSD1683_ContextStruct *context);
 
 /**
- * Save framebuffer to external memory
+ * Save framebuffers to external memory
  */
-void L2HAL_SSD1683_SaveFramebuffer
+void L2HAL_SSD1683_SaveFramebuffers
 (
 	L2HAL_SSD1683_ContextStruct *context,
 	void* RAMContext,
 	uint32_t saveAddress,
-	void (*FramebufferMemoryWriteFunctionPtr)(void*, uint32_t, uint32_t, uint8_t*)
+	void (*FramebuffersMemoryWriteFunctionPtr)(void*, uint32_t, uint32_t, uint8_t*)
 );
 
 /**
- * Load framebuffer from external memory
+ * Load framebuffers from external memory
  */
-void L2HAL_SSD1683_LoadFramebuffer
+void L2HAL_SSD1683_LoadFramebuffers
 (
 	L2HAL_SSD1683_ContextStruct *context,
 	void* RAMContext,
 	uint32_t loadAddress,
-	void (*FramebufferMemoryReadFunctionPtr)(void*, uint32_t, uint32_t, uint8_t*)
+	void (*FramebuffersMemoryReadFunctionPtr)(void*, uint32_t, uint32_t, uint8_t*)
 );
 
 /**
